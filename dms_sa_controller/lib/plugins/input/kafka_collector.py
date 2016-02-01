@@ -11,14 +11,19 @@ from kafka import KafkaConsumer
 from lib.utils.constants import avro_schema
 class KafkaCollector(InputBase,Logger):
 
-    def getPluginName(self):
-        return "kafka_collector"
-
     def run(self):
         ctx = ServiceContext()
+        config = ctx.getConfigService()
         queue = ctx.getQueueService()
-        self._initializeschema()
-        self._initializeconsumer()
+        self.schema = avro.schema.parse(avro_schema)
+
+        constructor="KafkaConsumer(%s,group_id=%s,bootstrap_servers=%s)"
+        topics = config.get("Input Plugin: kafka_collector","kafka_topics")
+        group_id = config.get("Input Plugin: kafka_collector","kafka_groupid")
+        bootstrap_server = config.get("Message","kafka_broker")
+        str = constructor % (topics,group_id,bootstrap_server)
+        self.consumer = eval(str)
+
         for msg in self.consumer:
             value = bytearray(msg.value)
             topic = msg.topic
@@ -37,16 +42,6 @@ class KafkaCollector(InputBase,Logger):
                 self.error("message format is invalid(%s)" % jsondata)
 
 
-    def _initializeschema(self):
-        self.schema = avro.schema.parse(avro_schema)
-
-    def _initializeconsumer(self):
-        constructor="KafkaConsumer(%s,group_id=%s,bootstrap_servers=%s)"
-        topics = self.kafka_topics
-        group_id = self.kafka_groupid
-        bootstrap_server = self.kafka_broker
-        str = constructor % (topics,group_id,bootstrap_server)
-        self.consumer = eval(str)
 
     def _decodemsg(self,msg):
         value = bytearray(msg.value)

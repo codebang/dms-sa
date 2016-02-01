@@ -1,4 +1,3 @@
-import sys
 import os
 
 from ConfigParser import SafeConfigParser
@@ -19,9 +18,14 @@ class DmsOrchestrator:
 
     ORCH_SECTION = "Orchestrator"
 
+    def __init__(self):
+        self.app_home = os.path.dirname(os.path.abspath(__file__))
+        os.chdir(self.app_home)
+
     def _configInitialize(self):
         self.config = SafeConfigParser()
-        config_file = os.path.join(os.path.dirname(__file__),"orchestrator.conf")
+        config_file = os.path.join(self.app_home,"orchestrator.conf")
+        print config_file
         self.config.read(config_file)
         local_path = self.config.get("File","local_temp_path")
         if not os.path.exists(local_path):
@@ -77,6 +81,5 @@ class DmsOrchestrator:
 if __name__ == "__main__":
     from lib.utils import Logger
     Logger.basicConfig()
-
     app = DmsOrchestrator()
     app.start()

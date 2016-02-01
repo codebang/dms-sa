@@ -8,13 +8,18 @@ from kafka import KafkaConsumer
 
 class EventCollector(InputBase,Logger):
 
-    def getPluginName(self):
-        return "event_collector"
-
     def run(self):
         ctx = ServiceContext()
         queue = ctx.getQueueService()
-        self._initializeconsumer()
+        config = ctx.getConfigService()
+
+        constructor="KafkaConsumer(%s,group_id=%s,bootstrap_servers=%s)"
+        topics = config.get("Input Plugin: event_collector","event_topic")
+        group_id = config.get("Input Plugin: event_collector","event_groupid")
+        bootstrap_server = config.get("Message","kafka_broker")
+        str = constructor % (topics,group_id,bootstrap_server)
+        self.consumer = eval(str)
+
         for msg in self.consumer:
             value = bytearray(msg.value)
             topic = msg.topic
@@ -29,13 +34,7 @@ class EventCollector(InputBase,Logger):
 
 
 
-    def _initializeconsumer(self):
-        constructor="KafkaConsumer(%s,group_id=%s,bootstrap_servers=%s)"
-        topics = self.event_topic
-        group_id = self.event_groupid
-        bootstrap_server = self.kafka_broker
-        str = constructor % (topics,group_id,bootstrap_server)
-        self.consumer = eval(str)
+
 
 
 

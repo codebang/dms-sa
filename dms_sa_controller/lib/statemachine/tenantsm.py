@@ -142,7 +142,7 @@ def saprovisioning(e):
 def packagetimeout(e):
     tenant = e.tenant
     kafka = DmsKafkaClient()
-    kafka.sendPackageTimeout(tenant.id,"Fatal","package activate timeout")
+    kafka.sendPackageTimeout(tenant.id)
     tenant.state = e.fsm.current
     session = object_session(tenant)
     session.flush()

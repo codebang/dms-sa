@@ -1,14 +1,15 @@
 from kazoo.client import KazooClient
 import os
-import json
+from lib.services.servicecontext import ServiceContext
 
 from .. utils import singleton
 
 @singleton
 class DMSInventoryManager(object):
     def __init__(self):
-        self.zk_address = "172.16.2.171:2181"
-        self.root_path = "/dso/accounts"
+        config = ServiceContext().getConfigService()
+        self.zk_address = config.get("Inventory","zk_address")
+        self.root_path = config.get("Inventory","zk_root_path")
         self.zk_client = KazooClient(hosts=self.zk_address)
 
     def start(self):

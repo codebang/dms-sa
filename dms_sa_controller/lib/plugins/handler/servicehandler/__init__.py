@@ -14,10 +14,9 @@ from lib.client.zkclient import DMSInventoryManager
 from lib.domain.model import ModelManager
 from lib.utils.constants import Tenant_Sate
 from lib.events import EventFactory
+from lib.services.servicecontext import ServiceContext
 
 class ServiceHandler(HandleBase):
-    def getPluginName(self):
-        return "service_handler"
 
     def run(self):
         self._initializeSession()
@@ -29,7 +28,8 @@ class ServiceHandler(HandleBase):
 
 
     def _initializeSession(self):
-        db_url = self.connect_url
+        config = ServiceContext().getConfigService()
+        db_url = config.get("DB","mysql_url")
         engine = create_engine(db_url)
         self.sessionmaker = sessionmaker(bind=engine)
         self.session = self.sessionmaker()

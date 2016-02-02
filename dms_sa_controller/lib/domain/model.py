@@ -8,6 +8,7 @@ class ModelManager(object):
     def initmodel(self):
         self.model_base = {}
         self.model_base["basic"] = [Firewall(),VRouter(),DNS()]
+        self.model_base["ipsecvpn/basic"] = [Firewall(),VRouter(),DNS(),IpsecVPN()]
         self.model_base["basic/ipsecvpn"] = [Firewall(),VRouter(),DNS(),IpsecVPN()]
         self.model_base["basic/ipsecvpn/vpc"] = [Firewall(),VRouter(),DNS(),IpsecVPN(),VPC()]
 

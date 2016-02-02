@@ -21,10 +21,10 @@ class EventCollector(InputBase,Logger):
         self.consumer = eval(str)
 
         for msg in self.consumer:
-            value = bytearray(msg.value)
+#            value = bytearray(msg.value)
             topic = msg.topic
             try:
-                jsondata = json.loads(str(value))
+                jsondata = json.loads(msg.value)
                 eventType = jsondata["eventName"]
                 jsondata['topic'] = topic
                 queue.put(EventFactory.getEvent(eventType,jsondata))

@@ -10,7 +10,7 @@
 # Global settings for the daemon.                                            #
 ##############################################################################
 
-Hostname    "{{account_id}}__{{host_name}}__{{vm_type}}"
+Hostname    "{{account_id}}__{{host_name}}__vrouter"
 FQDNLookup   false
 #BaseDir     "${prefix}/var/lib/collectd"
 #PIDFile     "${prefix}/var/run/collectd.pid"
@@ -38,7 +38,7 @@ TypesDB     "/opt/collectd/share/collectd/types.db"
 #       Interval 60                                                          #
 #   </LoadPlugin>                                                            #
 #----------------------------------------------------------------------------#
-Interval     5
+Interval     {{global_interval}}
 
 #MaxReadInterval 86400
 #Timeout         2
@@ -979,68 +979,91 @@ LoadPlugin write_kafka
     ModulePath "/opt/collectd/lib/collectd"
     Import "available_event_collectd"
     Import "crit_process_event_collectd"
-    Import "cpu_stat_collectd"
     Import "top_n_proc_stat_collectd"
+    Import "cpu_stat_collectd"
     Import "interface_stat_collectd"
-    Import "vrouter_traffic_collectd"
+    Import "vrouter_traffic_stat_collectd"
+    Import "vrouter_port_stat_collectd"
     <Module available_event_collectd>
-        Interval {{interval}}
+        Interval {{avail_interval}}
         PluginName "available_event"
         HostName "{{host_name}}"
         AccountId "{{account_id}}"
+        #fedora
         Path "{{fping_path}}"
-        Neighbours "{{neighbours}}"
+        Neighbours "{{neighbors_manageip}},{{neighbors_serviceip}}"
         KafkaClient "{{kafka_client}}"
         KafkaTopic "{{kafka_alert_event_topic}}"
-        VmType  {{vm_type}}
+        VmType  "vrouter"
         Verbose false
     </Module>
     <Module crit_process_event_collectd>
-        Interval {{interval}}
-        PluginName "crit_process"
+        Interval {{crit_proc_interval}}
+        PluginName "crit_process_event"
         HostName "{{host_name}}"
         AccountId "{{account_id}}"
         Processes "{{crit_procs}}"
         KafkaClient "{{kafka_client}}"
         KafkaTopic "{{kafka_alert_event_topic}}"
-        VmType  "{{vm_type}}"
-        Verbose false
-    </Module>
-    <Module cpu_stat_collectd>
-        Interval {{interval}}
-        PluginName "cpu_stat"
-        HostName "{{host_name}}"
-        AccountId "{{account_id}}"
-        VmType  "{{vm_type}}"
+        VmType  "vrouter"
         Verbose false
     </Module>
     <Module top_n_proc_stat_collectd>
-        Interval {{interval}}
-        PluginName "top_n_proc_tat"
+        Interval {{top_n_proc_interval}}
+        PluginName "top_n_proc_stat"
         HostName "{{host_name}}"
         AccountId "{{account_id}}"
-        TOP_N  {{top_n}}
-        VmType  "{{vm_type}}"
+        VmType  "vrouter"
+        TOP_N {{top_n_proc_number}}
+        Verbose false
+    </Module>
+    <Module cpu_stat_collectd>
+        Interval {{cpu_stat_interval}}
+        PluginName "cpu_stat"
+        HostName "{{host_name}}"
+        AccountId "{{account_id}}"
+        VmType  "vrouter"
         Verbose false
     </Module>
     <Module interface_stat_collectd>
-        Interval {{interval}}
+        Interval {{interface_stat_interval}}
         PluginName "interface_stat"
         HostName "{{host_name}}"
-        AccountId "{{account_id}}"
-        VmType  "{{vm_type}}"
+        AccountId "{{account_name}}"
+        VmType  "vrouter"
         Interfaces "{{interfaces}}"
         Verbose false
     </Module>
-    <Module vrouter_traffic>
-        Interval {{interval}}
-        PluginName "vrouter_traffic"
+    <Module vrouter_traffic_stat_collectd>
+        Interval {{vrouter_traffic_stat_interval}}
+        PluginName "vrouter_traffic_stat"
         HostName "{{host_name}}"
         AccountId "{{account_id}}"
-        VmType  "{{vm_type}}"
+        TABLE_IN_ID "{{table_in_id}}"
+        TABLE_OUT_ID "{{table_out_id}}"
+        VmType  "vrouter"
+        Verbose false
+    </Module>
+    <Module vrouter_port_stat_collectd>
+        Interval {{vrouter_port_stat_interval}}
+        PluginName "vrouter_port_stat"
+        HostName "{{host_name}}"
+        AccountId "{{account_id}}"
+        VmType  "vrouter"
         Verbose false
     </Module>
 </Plugin>
+
+#<Plugin python>
+#	ModulePath "/path/to/your/python/modules"
+#	LogTraces true
+#	Interactive true
+#	Import "spam"
+#
+#	<Module spam>
+#		spam "wonderful" "lovely"
+#	</Module>
+#</Plugin>
 
 #<Plugin redis>
 #   <Node example>
@@ -1397,8 +1420,8 @@ LoadPlugin write_kafka
 #</Plugin>
 
 <Plugin write_kafka>
-  Property "metadata.broker.list" "{{kafka_client}}"
-  <Topic "{{kafka_metric_topic}}">
+  Property "metadata.broker.list" "172.16.2.171:9092"
+  <Topic "dms.metric.vm">
     Format JSON
   </Topic>
 </Plugin>

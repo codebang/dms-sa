@@ -11,9 +11,6 @@ class CmdError(Exception):
 
 
 class VPNMetric(object):
-    def __init__(self):
-        self.init_dict = self.convert_metrics()
-
     def get_all_statistics(self):
         '''
         cmd to generate rx,tx info, no user info in rx
@@ -168,24 +165,6 @@ class VPNMetric(object):
             else:
                 self.init_dict.pop(key, None)
 
-    def get_delta_metrics(self):
-        latest_metric = self.convert_metrics()
-        "delete not existing user firstly from org metric"
-        self.purge_not_existing_user(latest_metric)
-        delta_metric = {}
-        for key, value in latest_metric.iteritems():
-            if self.init_dict.has_key(key):
-                org_value = self.init_dict.get(key)
-                delta_value = [float(value[0])-float(org_value[0]), float(value[1])-float(org_value[1])]
-                self.init_dict[key] = value
-                delta_metric[key] = delta_value
-            else:
-                delta_value = [float(value[0]), float(value[1])]
-                self.init_dict[key] = delta_value
-                delta_metric[key] = delta_value
-        '''{"out__10.x.x.x":[packets, bytes], "in__10.x.x.x":[packets, bytes], }'''
-        return delta_metric
-
     def test_compose_metrics(self, stat_lst, user_lst):
         stat_dict = self.parse_all_statistics(stat_lst)
         user_dict = self.parse_all_user_info(user_lst)
@@ -225,6 +204,28 @@ class VPNMetricMon(object):
             return
         collectd.info('%s plugin [verbose]: %s' % (self.plugin_name, msg))
 
+    def init(self):
+        # '''{"out__10.x.x.x":[packets, bytes], "in__10.x.x.x":[packets, bytes], }'''
+        self.BASE_LINE = VPNMetric().convert_metrics()
+
+    def get_delta_stat(self, latest_stat):
+        delta_stat = {}
+        for key, value in latest_stat.iteritems():
+            if self.BASE_LINE.has_key(key):
+                org_value = self.BASE_LINE.get(key)
+                packets = int(value[0]) - int(org_value[0])
+                bytes = int(value[1]) - int(org_value[1])
+                delta_stat[key] = [packets, bytes]
+                self.BASE_LINE[key] = value
+            else:
+                delta_stat[key] = value
+                self.BASE_LINE[key] = value
+
+        for key in self.BASE_LINE.keys():
+            if latest_stat.has_key(key) is False:
+                self.BASE_LINE.pop(key)
+        return delta_stat
+
     def configure_callback(self, conf):
         for node in conf.children:
             val = str(node.values[0])
@@ -259,18 +260,19 @@ class VPNMetricMon(object):
         try:
             self.log_verbose("plugin %s read callback called" % self.plugin_name)
             vpn_metric = VPNMetric()
-            statuses = vpn_metric.compose_metrics()
+            latest_stat = vpn_metric.convert_metrics()
             '''{"out__user_ip":[packets, bytes], "in__user_ip":[packets, bytes], }'''
-            for key, value in statuses.iteritems():
-                '''type_instance=user_ip, plugin_instance=out/in, type=in_packets/in_bytes,
+            delta_stat = self.get_delta_stat(latest_stat)
+            for key, value in delta_stat.iteritems():
+                '''type_instance=user_ip, type=in_packets/in_bytes,
                 host=account_name__host_name__vm_type, value=packets_value/bytes_value'''
                 host = "%s__%s__%s" % (self.account_id, self.hostname, self.vm_type)
                 if 'out' in key:
-                    type_instance = key.split('_')[1]
+                    type_instance = key.split('__')[1]
                     self.dispatch_value(self.plugin_name, host, "out_packets", type_instance, value[0])
                     self.dispatch_value(self.plugin_name, host, "out_bytes", type_instance, value[1])
                 if 'in' in key:
-                    type_instance = key.split('_')[1]
+                    type_instance = key.split('__')[1]
                     self.dispatch_value(self.plugin_name, host, "in_packets", type_instance, value[0])
                     self.dispatch_value(self.plugin_name, host, "in_bytes", type_instance, value[1])
 
@@ -299,5 +301,6 @@ else:
     import collectd
     vpn_mon = VPNMetricMon()
     collectd.register_config(vpn_mon.configure_callback)
+    collectd.register_init(vpn_mon.init)
     collectd.register_read(vpn_mon.read_callback)
 

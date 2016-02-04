@@ -241,19 +241,31 @@ mysql_qcache		hits:COUNTER:0:U, inserts:COUNTER:0:U, not_cached:COUNTER:0:U, low
 mysql_threads		running:GAUGE:0:U, connected:GAUGE:0:U, cached:GAUGE:0:U, created:COUNTER:0:U
 
 
-#customized types 
+# customized types
 # ifconfig
 rx_bytes	         value:GAUGE:0:U
 tx_bytes	         value:GAUGE:0:U
+rx_dropped              value:GAUGE:0:U
+tx_dropped              value:GAUGE:0:U
+rx_errors              value:GAUGE:0:U
+tx_errors              value:GAUGE:0:U
+
 # vpn usage
 in_packets               value:GAUGE:0:U
 in_bytes                 value:GAUGE:0:U
 out_packets              value:GAUGE:0:U
 out_bytes                value:GAUGE:0:U
+
 # vrouter
 n_packets                              value:GAUGE:0:U
 n_bytes                                value:GAUGE:0:U
+mod_dl_dst_n_bytes                     value:GAUGE:0:U
+dl_src_n_bytes                         value:GAUGE:0:U
+
 # top n proc
 by_cpu                  value:GAUGE:0:U
 by_memory               value:GAUGE:0:U
 
+# firewall
+src_bytes               value:GAUGE:0:U
+dst_bytes               value:GAUGE:0:U

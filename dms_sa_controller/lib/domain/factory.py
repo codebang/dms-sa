@@ -58,7 +58,7 @@ class WFBuilder(object):
     def _build_common(self,vmType,context):
 
         steps = []
-        create_tmp_path = ExecuteCommandStep("if sudo [ -d %s ];then sudo rm -rf %s;fi;sudo mkdir %s" % (self.remote_path_base,self.remote_path_base,self.remote_path_base))
+        create_tmp_path = ExecuteCommandStep("if [ -d %s ];then  rm -rf %s;fi; mkdir %s" % (self.remote_path_base,self.remote_path_base,self.remote_path_base))
         steps.append(create_tmp_path)
         file_home = os.path.join(self.files_home,vmType)
         typedb_path = os.path.join(file_home,"types.db")
@@ -91,6 +91,8 @@ class WFBuilder(object):
         steps.extend(commands)
 
         steps.append(ExecuteCommandStep("sudo /opt/collectd/sbin/collectd"))
+        
+        steps.append(ExecuteCommandStep("echo 'finished'"))
 
         return steps
 

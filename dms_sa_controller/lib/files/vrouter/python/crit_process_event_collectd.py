@@ -28,23 +28,30 @@ class ProcessStatus(object):
             proc = proc.strip()
             command = self._compose_command(proc)
             result = self._run(command)
-            if result == '' or result == '/bin/sh\ngrep\n' or result=='grep\n':
+            if len(result) == 0:
                 status[proc] = 0
             else:
                 status[proc] = 1
         return status
 
     def _compose_command(self, proc):
-        cmd = "ps -elf | grep %s | awk '{print $15}'" % (proc)
+        cmd = "sudo ps -elf | grep %s | awk '{print $15}'" % (proc)
         return cmd
 
     def _run(self, cmd):
         try:
             proc = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, close_fds=True)
             (stdout, stderr) = proc.communicate()
-            output = stdout.replace('\n', '|')
+            output = stdout.split("\n")
             print("cmd %s output is %s" % (cmd, output))
-            return stdout
+            result = []
+            for line in output:
+                line = line.strip()
+                if line == '' or line == 'grep' or line == '/bin/sh':
+                    continue
+                else:
+                    result.append(line)
+            return result
         except Exception as err:
             raise CmdError("failed to execute command: %s, reason: %s" % (' '.join(cmd), err.message))
 
@@ -150,7 +157,7 @@ class ProcessStatusMon(object):
                 if value == 0:
                     timestamp = long(time.time())
                     proc_name = key
-                    data = compose_data(timestamp,self.vm_type,self.hostname,self.account_id, proc_name)
+                    data = compose_data(timestamp, self.vm_type, self.hostname, self.account_id, proc_name)
                     try:
                         self.producer.send_messages(self.kafka_topic, data)
                     except:

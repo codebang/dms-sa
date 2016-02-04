@@ -1,5 +1,6 @@
 from kazoo.client import KazooClient
 import os
+import json
 from lib.services.servicecontext import ServiceContext
 
 from .. utils import singleton
@@ -39,15 +40,7 @@ class DMSInventoryManager(object):
             nodepath = os.path.join(parent_path,child)
             print nodepath
             data,stats = self.zk_client.get(nodepath)
-            lines = data.splitlines()
-            map = {}
-            for line in lines:
-                kvs = line.split(":")
-                key = kvs[0]
-                value = kvs[1]
-                if value == "None":
-                    value = None
-                map[key] = value
+            map = json.loads(data)
             ret = {}
             ret["vmType"] = service
             ret["accountId"] = accountId
@@ -58,6 +51,5 @@ class DMSInventoryManager(object):
             ret["eventName"] = "CREATE_VM"
             nodes.append(ret)
         return nodes
-
 
 

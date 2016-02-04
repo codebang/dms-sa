@@ -72,6 +72,7 @@ def vmcreate(e):
     node.publicip = msg.vmPublicIP
     node.serviceip = msg.vmServiceIP
     session.add(node)
+    session.commit()
     logger.info("node(%s/%s/%s) has been created in db" % (tenant.id,node.vmtype,node.stackid))
     flag = True
     for svc in tenant.services:
@@ -82,7 +83,7 @@ def vmcreate(e):
     if flag:
         tenant.getSM().trigger("create_vm_done",tenant = tenant)
 
-    session.commit()
+
 
 
 def monitorcpe(e):

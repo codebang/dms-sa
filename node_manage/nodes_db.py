@@ -91,7 +91,7 @@ if __name__ == '__main__':
           node_map["username"] = node.service.os
           node_map["os"] = node.service.os
           node_map["description"] = "accountname(%s)vmtype(%s)" % (node.service.tenant.name,node.service.name)
-          node_map["tags"] = node.service.tenant.name
+          node_map["tags"] = node.service.tenant.id
           node_map["hostname"] = node.manageip
       sm.close_all()
       print yaml.dump(dict,default_flow_style=False)

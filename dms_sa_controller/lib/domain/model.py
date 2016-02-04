@@ -26,8 +26,6 @@ class ServiceBase(object):
         self.type = self.__class__.__name__.lower()
         self.share_state[self.type] = self
         self.initprop()
-        self.manage_neighbors = []
-        self.service_neighbors = []
 
     @classmethod
     def getServiceModel(cls,name):
@@ -40,6 +38,8 @@ class Firewall(ServiceBase):
     def initprop(self):
         self.os = "ubuntu"
         self.instancecount = 1
+        self.manage_neighbors = []
+        self.service_neighbors = []
 
 
 
@@ -48,8 +48,8 @@ class VRouter(ServiceBase):
     def initprop(self):
         self.os = "fedora"
         self.instancecount = 1
-        self.service_neighbors = ["vpn"]
-        self.manage_neighbors = ["vpn","dns"]
+        self.service_neighbors = ["ipsecvpn"]
+        self.manage_neighbors = ["ipsecvpn","dns"]
 
 @singleton
 class IpsecVPN(ServiceBase):
@@ -64,13 +64,16 @@ class DNS(ServiceBase):
     def initprop(self):
         self.os = "ubuntu"
         self.instancecount = 1
-        self.manage_neighbors = ["vpn","vrouter"]
+        self.service_neighbors = []
+        self.manage_neighbors = ["ipsecvpn","vrouter"]
 
 @singleton
 class VPC(ServiceBase):
     def initprop(self):
         self.os = "ubuntu"
         self.instancecount = 0
+        self.manage_neighbors = []
+        self.service_neighbors = []
 
 
 

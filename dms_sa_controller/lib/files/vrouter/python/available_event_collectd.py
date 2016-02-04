@@ -29,7 +29,7 @@ class FPing(object):
         self.dst_hosts = dst_hosts
 
     def _compose_cmd_line(self):
-        cmd = [self.path, '-e']
+        cmd = ['sudo', self.path, '-e']
         for host in self.dst_hosts:
             cmd.append(host)
         return ' '.join(cmd)

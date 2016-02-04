@@ -58,7 +58,7 @@ class WFBuilder(object):
     def _build_common(self,vmType,context):
 
         steps = []
-        create_tmp_path = ExecuteCommandStep("if [ -d %s ];then rm -rf %s;fi;mkdir %s" % (self.remote_path_base,self.remote_path_base,self.remote_path_base))
+        create_tmp_path = ExecuteCommandStep("if sudo [ -d %s ];then sudo rm -rf %s;fi;sudo mkdir %s" % (self.remote_path_base,self.remote_path_base,self.remote_path_base))
         steps.append(create_tmp_path)
         file_home = os.path.join(self.files_home,vmType)
         typedb_path = os.path.join(file_home,"types.db")
@@ -115,7 +115,7 @@ class IPSecVPNServiceEnableWFBuilder(WFBuilder):
     def buildWF(self,context):
         ctx = context["ipsecvpn"]
         steps = []
-        steps.append(ExecuteCommandStep("sudo ps cax | grep collectd | wc -l; if [ $? != 0 ]; then pkill collectd;fi"))
+        steps.append(ExecuteCommandStep("sudo ps cax | grep collectd | wc -l; if [ $? != 0 ]; then sudo pkill collectd;fi"))
         steps.extend(self._build_common("ipsecvpn",ctx))
         return steps
         return []

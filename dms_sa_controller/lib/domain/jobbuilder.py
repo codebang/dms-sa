@@ -116,6 +116,9 @@ class JobBuilder:
                 for node in nodes:
                     ctx["neighbors_manageip"].append(node.manageip)
 
+            ctx["neighbors_manageip"] = ",".join(ctx["neighbors_manageip"])
+            ctx["neighbors_serviceip"] = ",".join(ctx["neighbors_serviceip"])
+
             ctx["os"] = svcdef.os
 
         return context

@@ -100,7 +100,7 @@ class VRServiceEnableWFBuilder(WFBuilder):
     def buildWF(self,context):
         ctx = context["vrouter"]
         steps = []
-        steps.append(ExecuteCommandStep("sudo pkill -9 collectd"))
+        steps.append(ExecuteCommandStep("num=`ps -ef | grep collectd | grep -v grep | wc -l`; if [ $num -gt 0 ];then sudo pkill -9 collectd;fi"))
         steps.extend(self._build_common("vrouter",ctx))
         return steps
 
@@ -109,7 +109,7 @@ class FWServiceEnableWFBuilder(WFBuilder):
     def buildWF(self,context):
         ctx = context["firewall"]
         steps = []
-        steps.append(ExecuteCommandStep("sudo pkill -9 collectd"))
+        steps.append(ExecuteCommandStep("num=`ps -ef | grep collectd | grep -v grep | wc -l`; if [ $num -gt 0 ];then sudo pkill -9 collectd;fi"))
         steps.extend(self._build_common("firewall",ctx))
         return steps
 

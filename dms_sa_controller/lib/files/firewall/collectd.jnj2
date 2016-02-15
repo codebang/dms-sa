@@ -977,24 +977,24 @@ LoadPlugin write_kafka
 
 <Plugin python>
     ModulePath "/opt/collectd/lib/collectd"
-    Import "available_event_collectd"
+#    Import "available_event_collectd"
     Import "crit_process_event_collectd"
     Import "top_n_proc_stat_collectd"
     Import "cpu_stat_collectd"
     Import "interface_stat_collectd"
     Import "firewall_traffic_stat_collectd"
-    <Module available_event_collectd>
-        Interval {{avail_interval}}
-        PluginName "available_event"
-        HostName "{{host_name}}"
-        AccountId "{{account_id}}"
-        Path "{{fping_path}}"
-        Neighbours "{{neighbors_manageip}},{{neighbors_serviceip}}"
-        KafkaClient "{{kafka_client}}"
-        KafkaTopic "{{kafka_alert_event_topic}}"
-        VmType  "firewall"
-        Verbose false
-    </Module>
+#    <Module available_event_collectd>
+#        Interval {{avail_interval}}
+#        PluginName "available_event"
+#        HostName "{{host_name}}"
+#        AccountId "{{account_id}}"
+#        Path "{{fping_path}}"
+#        Neighbours "{{neighbors_manageip}},{{neighbors_serviceip}}"
+#        KafkaClient "{{kafka_client}}"
+#        KafkaTopic "{{kafka_alert_event_topic}}"
+#        VmType  "firewall"
+#        Verbose false
+#    </Module>
     <Module crit_process_event_collectd>
         Interval {{crit_proc_interval}}
         PluginName "crit_process_event"

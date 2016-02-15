@@ -1029,7 +1029,7 @@ LoadPlugin write_kafka
         Interval {{interface_stat_interval}}
         PluginName "interface_stat"
         HostName "{{host_name}}"
-        AccountId "{{account_name}}"
+        AccountId "{{account_id}}"
         VmType  "vrouter"
         Interfaces "{{interfaces}}"
         Verbose false

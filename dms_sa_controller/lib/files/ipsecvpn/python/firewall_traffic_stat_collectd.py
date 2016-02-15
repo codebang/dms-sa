@@ -1,6 +1,7 @@
 # 1. 'sudo iptaccount -a' to get all tables like internet, intragrp, intergrp
 # 2. use 'iptaccount -l internet' to get users details for accessing internet
 # 3. use 'iptaccount -l intergrp' to get user group details for accessing internet
+# 4. use 'sudo policy.sh show' to get sent bytes and dropped
 import subprocess
 import socket
 import traceback
@@ -8,6 +9,57 @@ import traceback
 
 class CmdError(Exception):
     pass
+
+
+def run_policy_cmd():
+    cmd = "sudo policy.sh show"
+    lines = run(cmd)
+    output = []
+    index = None
+    for idx, line in enumerate(lines):
+        if 'qdiscs statistics' in line:
+            index = idx
+            break
+    index += 1
+    lines = lines[index:]
+    for line in lines:
+        if 'qdisc' in line or 'Sent' in line:
+            output.append(line)
+    # ['qdisc htb 1: xxxx', 'Sent xxx', 'qdisc pfifo: xxx', 'Sent xxx']
+
+    result = {}
+    key = output[0]
+    for item in output:
+        if 'qdisc' in item:
+            key = item
+            continue
+        if 'Sent' in item:
+            value = item
+            result[key] = value
+            continue
+    # {'qdisc htb 1:xxx': 'Sent xxx', 'qdisc pfifo: xxx': 'Sent xxx'}
+    return result
+
+
+def get_policy_stat():
+    output = run_policy_cmd()
+    stat_dict = {}
+    for key, value in output.iteritems():
+        policy_name = parse_policy_name(key)
+        policy_value = parse_policy_stats(value)
+        stat_dict[policy_name] = policy_value
+    # {'qdisc_htb_1':[dropped, sent_bytes], 'qdisc_pfifo_1100':[dropped, sent_bytes]}
+    return stat_dict
+
+
+def parse_policy_name(line):
+    return line.split(':')[0].strip().replace(' ','_')
+
+
+def parse_policy_stats(line):
+    dropped = line.split('dropped')[1].split(',')[0].strip()
+    sent_bytes = line.split('bytes')[0].strip().replace('Sent','').strip()
+    return [dropped, sent_bytes]
 
 
 def get_internet_stat():
@@ -115,6 +167,7 @@ class FireWallUserStatMon(object):
     def init(self):
         self.USER_BASE_LINE = get_internet_stat()
         self.GRP_BASE_LINE = get_intergrp_stat()
+        self.POLICY_BASE_LINE = get_policy_stat()
 
     def configure_callback(self, conf):
         for node in conf.children:
@@ -153,8 +206,10 @@ class FireWallUserStatMon(object):
         try:
             user_latest_stat = get_internet_stat()
             grp_latest_stat = get_intergrp_stat()
+            policy_latest_stat = get_policy_stat()
             user_delta_stat = get_delta_value(self.USER_BASE_LINE, user_latest_stat)
             grp_delta_stat = get_delta_value(self.GRP_BASE_LINE, grp_latest_stat)
+            policy_delta_stat = get_delta_value(self.POLICY_BASE_LINE, policy_latest_stat)
             host = "%s__%s__%s" % (self.account_id, self.hostname, self.vm_type)
             # {"10.1.4.77":[src_bytes, dst_bytes], }
             for ip, value in user_delta_stat.iteritems():
@@ -167,6 +222,11 @@ class FireWallUserStatMon(object):
                 plugin_instance = 'intergrp'
                 self.dispatch_value(self.plugin_name, host, "src_bytes", type_instance, plugin_instance, value[0])
                 self.dispatch_value(self.plugin_name, host, "dst_bytes", type_instance, plugin_instance, value[1])
+            for policy_name, value in policy_delta_stat.iteritems():
+                type_instance = policy_name
+                plugin_instance = 'policy.sh'
+                self.dispatch_value(self.plugin_name, host, "dropped", type_instance, plugin_instance, value[0])
+                self.dispatch_value(self.plugin_name, host, "sent_bytes", type_instance, plugin_instance, value[1])
         except Exception as exp:
             self.log_verbose(traceback.print_exc())
             self.log_verbose("plugin %s run into exception" % (self.plugin_name))
@@ -174,8 +234,9 @@ class FireWallUserStatMon(object):
 
 
 if __name__ == '__main__':
-    print str(get_intergrp_stat())
-    print str(get_internet_stat())
+    # print str(get_intergrp_stat())
+    # print str(get_internet_stat())
+    print str(get_policy_stat())
 else:
     import collectd
     firewall_status = FireWallUserStatMon()

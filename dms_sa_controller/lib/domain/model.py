@@ -1,4 +1,5 @@
 from lib.utils import singleton
+from lib.utils import logger
 
 class ModelManager(object):
     def __init__(self):
@@ -8,13 +9,18 @@ class ModelManager(object):
     def initmodel(self):
         self.model_base = {}
         self.model_base["basic"] = [Firewall(),VRouter(),DNS()]
-        self.model_base["ipsecvpn/basic"] = [Firewall(),VRouter(),DNS(),IpsecVPN()]
-        self.model_base["basic/ipsecvpn"] = [Firewall(),VRouter(),DNS(),IpsecVPN()]
-        self.model_base["basic/ipsecvpn/vpc"] = [Firewall(),VRouter(),DNS(),IpsecVPN(),VPC()]
+        self.model_base["ipsecvpn"] = [IpsecVPN()]
+        self.model_base["vpc"] = [VPC()]
 
 
-    def listsvcbypath(self,path):
-        return self.model_base.get(path,None)
+    def listsvcbypath(self,pnames):
+        ret = []
+        for package_name in pnames:
+            if self.model_base.has_key(package_name):
+                ret.append(self.model_base.get(package_name))
+            else:
+                logger.error("invalid package name: %s" % package_name)
+        return ret
 
     def getsvfdefbyname(self,name):
         return ServiceBase.getServiceModel(name)

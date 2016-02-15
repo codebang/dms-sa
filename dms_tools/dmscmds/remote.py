@@ -6,7 +6,7 @@ from inventory.do import DMSToolTask
 from inventory.account import Account
 from executor.tcpdump_exec import TcpdumpExecutor
 
-class StartCommand(Subcommand):
+class Execute(Subcommand):
     def __init__(self):
         Subcommand.__init__(self,'start',OptionParser(option_class=MultipleOption,usage='%prog [OPTIONS]'),'running tcpdump on all the nodes of one account')
         self.parser.add_option('-a','--account',action="store",dest="accountId")
@@ -39,7 +39,7 @@ class StartCommand(Subcommand):
         else:
             print "ERROR: have started tcpdump task on the account ,should stop it first"
 
-class StopCommand(Subcommand):
+class Copy(Subcommand):
     def __init__(self):
         Subcommand.__init__(self,'stop',OptionParser(option_class=MultipleOption,usage='%prog [OPTIONS]'),'stop tcpdump running on the nodes')
         self.parser.add_option('-a','--account',action="store",dest="accountId")
@@ -77,8 +77,8 @@ class StatusCommand(Subcommand):
             return
         print TcpdumpExecutor(account).status()
 
-class Tcpdump(Command):
+class Remote(Command):
     def __init__(self):
         subparser = SubcommandOptionParser(subcommands=(StartCommand(),StopCommand(),StatusCommand()))
-        Subcommand.__init__(self,'tcpdump',subparser,'running tcpdump')
+        Subcommand.__init__(self,'remote',subparser,'remote execute')
 

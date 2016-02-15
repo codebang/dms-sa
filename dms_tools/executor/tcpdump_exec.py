@@ -7,6 +7,17 @@ import os
 from tabulate import tabulate
 import json
 
+def parseoption(option,flag):
+    if option is None:
+        return None
+    arrays = option.strip().split(" ")
+    for index,item in enumerate(arrays):
+        if item.strip() == flag:
+            for idx in range(index+1,len(arrays)):
+                if arrays[idx].strip() != "":
+                    return arrays[idx]
+    return None
+
 class TcpdumpExecutor(object):
     def __init__(self,account):
         self.account = account[0]
@@ -14,20 +25,32 @@ class TcpdumpExecutor(object):
         self.client = RundeckNode().client
 
     def start(self,eth_config):
-        if eth_config is None:
-            print "no eth config"
-            return
-
         shell_cmd = "if sudo [ -d /tmp/tcpdump ];then sudo rm -rf /tmp/tcpdump;fi;sudo mkdir /tmp/tcpdump"
         if (executils.sync_runadhoc(self.client,"dms-sa",shell_cmd,tags=self.account.id) < 0):
             return
-        ids = []
+        nodemap = {}
         for node in self.nodes:
-            eths = eth_config[node.vmtype]
-            for eth in eths:
+            nodemap[node.vmtype] = node
+        ids = []
+        cmd = "nohup sudo tcpdump %s -w %s > /dev/null 2>&1 &"
+        for k,v in eth_config.iteritems():
+            if v is None:
+                continue
+            node = nodemap[k]
+            for command in v:
+                interface = parseoption(command,"-i")
+                writefile = parseoption(command,"-w")
+                if writefile != None:
+                    print "should not identify the output file"
+                    continue
+                if interface is None:
+                    print "should identify the interface"
+                    continue
+                outfile = "/tmp/tcpdump/%s.cap" % interface
+                print "remote command %s" % ( cmd % (command,outfile) )
                 ids.append(self.client.run_adhoc_command("dms-sa",
-                                             "  nohup sudo tcpdump -i %s -s 0 -vv -w /tmp/tcpdump/%s.cap > /dev/null 2>&1 &" %(eth,eth),
-                                              name= node.name))
+                           cmd % (command,outfile),
+                             name= node.name))
 
         if (executils.wait_adhoc(self.client,ids) < 0):
             return

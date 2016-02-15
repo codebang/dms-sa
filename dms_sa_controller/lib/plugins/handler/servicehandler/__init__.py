@@ -64,9 +64,8 @@ def handlePackage_Activate(*args,**kwargs):
         tenant.state = Tenant_Sate.INIT
         session.add(tenant)
         packageName = event.packageName
-        pkg_path = "/".join(packageName)
         manager = ModelManager()
-        svcs = manager.listsvcbypath(pkg_path)
+        svcs = manager.listsvcbypath(packageName)
         if svcs is None:
           logger.error("package(%s) has no corresponding service definition..." % pkg_path)
           return

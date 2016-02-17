@@ -255,6 +255,8 @@ in_packets               value:GAUGE:0:U
 in_bytes                 value:GAUGE:0:U
 out_packets              value:GAUGE:0:U
 out_bytes                value:GAUGE:0:U
+in_addtime               value:GAUGE:0:U
+out_addtime               value:GAUGE:0:U
 
 # vrouter
 n_packets                              value:GAUGE:0:U

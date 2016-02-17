@@ -48,17 +48,19 @@ class VPNMetric(object):
             src_key = pick_field(line, '@', '0x', 0, 1)
             packets = pick_field(line, 'packets(', ',')
             bytes = pick_field(line, 'bytes(', ',')
+            addtime = line.split('addtime(')[1].split(',')[0]
             key = 'out_%s' % (src_key)
-            value = [packets, bytes]
-            '''[out_100f, [packets, bytes]]'''
+            value = [packets, bytes, addtime]
+            '''[out_100f, [packets, bytes, addtime]]'''
             return [key, value]
         if 'dir=in' in line:
             src_key = pick_field(line, '@', '0x', 0, 1)
             packets = pick_field(line, 'packets(', ',')
             bytes = pick_field(line, 'bytes(', ',')
+            addtime = line.split('addtime(')[1].split(',')[0]
             user_ip = pick_field(line, 'policy=', '/')
             key = 'in_%s' % (src_key)
-            value = [packets, bytes, user_ip]
+            value = [packets, bytes, addtime, user_ip]
             return [key, value]
 
     def parse_each_user(self, user_info_line):
@@ -87,7 +89,7 @@ class VPNMetric(object):
         for line in org_result:
             stat = self.parse_each_statistic(line)
             stat_dict[stat[0]] = stat[1]
-        '''{"out_100f":[packets, bytes], "in_1010":[packets, bytes, user_ip], }'''
+        '''{"out_100f":[packets, bytes, addtime], "in_1010":[packets, bytes, addtime, user_ip], }'''
         return stat_dict
 
     def parse_all_user_info(self, users):
@@ -105,13 +107,13 @@ class VPNMetric(object):
         for line in org_result:
             stat = self.parse_each_statistic(line)
             stat_dict[stat[0]] = stat[1]
-        '''{"out_100f":[packets, bytes], "in_1010":[packets, bytes, user_ip], }'''
+        '''{"out_100f":[packets, bytes, addtime], "in_1010":[packets, bytes, addtime, user_ip], }'''
         return stat_dict
 
     def find_user_ip(self, out_key, user_dict, stat_dict):
         in_key = user_dict.get(out_key)
         stat_info = stat_dict.get(in_key)
-        return stat_info[2]
+        return stat_info[3]
 
     def compose_metrics(self):
         stat_dict = self._parse_all_statistics()
@@ -125,7 +127,7 @@ class VPNMetric(object):
                 user_ip = self.find_user_ip(key, user_dict, stat_dict)
                 value.append(user_ip)
                 metrics_dict[key] = value
-        '''{"out_100f":[packets, bytes, user_ip], "in_1010":[packets, bytes, user_ip], }'''
+        '''{"out_100f":[packets, bytes, addtime, user_ip], "in_1010":[packets, bytes, addtime, user_ip], }'''
         return metrics_dict
 
     def convert_metrics(self):
@@ -136,12 +138,12 @@ class VPNMetric(object):
         for key, value in org_metrics.iteritems():
             new_key=""
             if 'out' in key:
-                new_key = 'out__%s' % value[2]
+                new_key = 'out__%s' % value[3]
             if 'in' in key:
-                new_key = 'in__%s' % value[2]
-            value = value[:2]
+                new_key = 'in__%s' % value[3]
+            value = value[:3]
             final_metrics[new_key] = value
-        '''{"out__10.x.x.x":[packets, bytes], "in__10.x.x.x":[packets, bytes], }'''
+        '''{"out__10.x.x.x":[packets, bytes, addtime], "in__10.x.x.x":[packets, bytes, addtime], }'''
         return final_metrics
 
     def test_convert_metrics(self, dict):
@@ -150,12 +152,12 @@ class VPNMetric(object):
         for key, value in dict.iteritems():
             new_key=""
             if 'out' in key:
-                new_key = 'out__%s' % value[2]
+                new_key = 'out__%s' % value[3]
             if 'in' in key:
-                new_key = 'in__%s' % value[2]
-            value = value[:2]
+                new_key = 'in__%s' % value[3]
+            value = value[:3]
             final_metrics[new_key] = value
-        '''{"out__10.x.x.x":[packets, bytes], "in__10.x.x.x":[packets, bytes], }'''
+        '''{"out__10.x.x.x":[packets, bytes, addtime], "in__10.x.x.x":[packets, bytes, addtime], }'''
         return final_metrics
 
     def purge_not_existing_user(self, latest_metric):
@@ -176,8 +178,28 @@ class VPNMetric(object):
                 user_ip = self.find_user_ip(key, user_dict, stat_dict)
                 value.append(user_ip)
                 metrics_dict[key] = value
-        '''{"out_100f":[packets, bytes, user_ip], "in_1010":[packets, bytes, user_ip], }'''
+        '''{"out_100f":[packets, bytes, addtime, user_ip], "in_1010":[packets, bytes, addtime, user_ip], }'''
         return metrics_dict
+
+
+def test_get_delta_stat(self, org_stat, latest_stat):
+        delta_stat = {}
+        for key, value in latest_stat.iteritems():
+            if org_stat.has_key(key):
+                org_value = org_stat.get(key)
+                packets = int(value[0]) - int(org_value[0])
+                bytes = int(value[1]) - int(org_value[1])
+                addtime = int(value[2]) - int(org_value[2])
+                delta_stat[key] = [packets, bytes, addtime]
+                org_stat[key] = value
+            else:
+                delta_stat[key] = value
+                org_stat[key] = value
+
+        for key in org_stat.keys():
+            if latest_stat.has_key(key) is False:
+                org_stat.pop(key)
+        return delta_stat
 
 
 def pick_field(org_str, first_separator, second_separator, first_index=1, second_index=0):
@@ -215,7 +237,8 @@ class VPNMetricMon(object):
                 org_value = self.BASE_LINE.get(key)
                 packets = int(value[0]) - int(org_value[0])
                 bytes = int(value[1]) - int(org_value[1])
-                delta_stat[key] = [packets, bytes]
+                addtime = int(value[2]) - int(org_value[2])
+                delta_stat[key] = [packets, bytes, addtime]
                 self.BASE_LINE[key] = value
             else:
                 delta_stat[key] = value
@@ -261,7 +284,7 @@ class VPNMetricMon(object):
             self.log_verbose("plugin %s read callback called" % self.plugin_name)
             vpn_metric = VPNMetric()
             latest_stat = vpn_metric.convert_metrics()
-            '''{"out__user_ip":[packets, bytes], "in__user_ip":[packets, bytes], }'''
+            '''{"out__user_ip":[packets, bytes, addtime], "in__user_ip":[packets, bytes,addtime], }'''
             delta_stat = self.get_delta_stat(latest_stat)
             for key, value in delta_stat.iteritems():
                 '''type_instance=user_ip, type=in_packets/in_bytes,
@@ -271,10 +294,12 @@ class VPNMetricMon(object):
                     type_instance = key.split('__')[1]
                     self.dispatch_value(self.plugin_name, host, "out_packets", type_instance, value[0])
                     self.dispatch_value(self.plugin_name, host, "out_bytes", type_instance, value[1])
+                    self.dispatch_value(self.plugin_name, host, "out_addtime", type_instance, value[2])
                 if 'in' in key:
                     type_instance = key.split('__')[1]
                     self.dispatch_value(self.plugin_name, host, "in_packets", type_instance, value[0])
                     self.dispatch_value(self.plugin_name, host, "in_bytes", type_instance, value[1])
+                    self.dispatch_value(self.plugin_name, host, "in_addtime", type_instance, value[2])
 
         except Exception as exp:
             self.log_verbose(traceback.print_exc())
@@ -282,21 +307,32 @@ class VPNMetricMon(object):
 
 
 if __name__ == '__main__':
-    users = []
-    with open("./user.txt", 'r') as f:
-        for line in f:
-            users.append(line)
-
-    stats = []
-    with open("./stats.txt", 'r') as f:
-        for line in f:
-            stats.append(line)
-
+    # users = []
+    # with open("./user.txt", 'r') as f:
+    #     for line in f:
+    #         users.append(line)
+    #
+    # stats = []
+    # with open("./stats.txt", 'r') as f:
+    #     for line in f:
+    #         stats.append(line)
+    #
+    # vpn_status = VPNMetric()
+    #
+    # result = vpn_status.test_compose_metrics(stats,users)
+    # result = vpn_status.test_convert_metrics(result)
+    # print str(result)
+    print '--------stat 1--------'
     vpn_status = VPNMetric()
+    stat1 = vpn_status.convert_metrics()
+    print stat1
 
-    result = vpn_status.test_compose_metrics(stats,users)
-    result = vpn_status.test_convert_metrics(result)
-    print str(result)
+    print '--------stat 2-------'
+    import time
+    time.sleep(10)
+    stat2 = vpn_status.convert_metrics()
+    print '---------delta-------'
+    print(test_get_delta_stat(stat1,stat2))
 else:
     import collectd
     vpn_mon = VPNMetricMon()

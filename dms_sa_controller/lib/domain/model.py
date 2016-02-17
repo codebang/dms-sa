@@ -17,7 +17,7 @@ class ModelManager(object):
         ret = []
         for package_name in pnames:
             if self.model_base.has_key(package_name):
-                ret.append(self.model_base.get(package_name))
+                ret.extend(self.model_base.get(package_name))
             else:
                 logger.error("invalid package name: %s" % package_name)
         return ret

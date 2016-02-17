@@ -48,7 +48,7 @@ def get_policy_stat():
         policy_name = parse_policy_name(key)
         policy_value = parse_policy_stats(value)
         stat_dict[policy_name] = policy_value
-    # {'qdisc_htb_1':[dropped, sent_bytes], 'qdisc_pfifo_1100':[dropped, sent_bytes]}
+    # {'qdisc_htb_1':[dropped, sent_bytes, sent_pkt], 'qdisc_pfifo_1100':[dropped, sent_bytes, sent_pkt]}
     return stat_dict
 
 
@@ -59,50 +59,59 @@ def parse_policy_name(line):
 def parse_policy_stats(line):
     dropped = line.split('dropped')[1].split(',')[0].strip()
     sent_bytes = line.split('bytes')[0].strip().replace('Sent','').strip()
-    return [dropped, sent_bytes]
+    sent_pkt = line.split('pkt')[0].strip().split('bytes')[1].strip()
+    return [dropped, sent_bytes, sent_pkt]
 
 
 def get_internet_stat():
-    user_stat = {}
     output = run_internet_cmd()
-    for line in output:
-        user_ip = parse_ip_info(line)
-        src_bytes = parse_src_bytes(line)
-        dst_bytes = parse_dst_bytes(line)
-        user_stat[user_ip] = [src_bytes, dst_bytes]
-    # {"10.1.4.77":[src_bytes, dst_bytes], }
-    return user_stat
+    internet_stat = get_traffic_stat(output)
+    # {"10.1.4.77":[src_bytes, src_packets, dst_bytes, src_packets, dst_packets], }
+    return internet_stat
 
 
 def get_intergrp_stat():
-    user_grp_stat = {}
     output = run_intergrp_cmd()
-    for line in output:
-        user_grp_ip = parse_ip_info(line)
+    intergrp_stat = get_traffic_stat(output)
+    # {"10.1.4.77":[src_bytes, src_packets, dst_bytes, dst_packets], }
+    return intergrp_stat
+
+
+def get_intragrp_stat():
+    output = run_intragrp_cmd()
+    intragrp_stat = get_traffic_stat(output)
+    # {"10.1.4.77":[src_bytes, src_packets, dst_bytes, dst_packets], }
+    return intragrp_stat
+
+
+def get_traffic_stat(cmd_result):
+    traffic_stat = {}
+    for line in cmd_result:
+        ip = parse_ip_info(line)
         src_bytes = parse_src_bytes(line)
+        src_packets = parse_src_packets(line)
         dst_bytes = parse_dst_bytes(line)
-        user_grp_stat[user_grp_ip] = [src_bytes, dst_bytes]
-    # {"10.1.4.77":[src_bytes, dst_bytes], }
-    return user_grp_stat
+        dst_packets = parse_dst_packets(line)
+        traffic_stat[ip] = [src_bytes, src_packets, dst_bytes, dst_packets]
+    # {"10.1.4.77":[src_bytes, src_packets, dst_bytes, dst_packets], }
+    return traffic_stat
 
 
 def run_intergrp_cmd():
     cmd = 'sudo iptaccount -l intergrp | grep ^IP'
-    lines = run(cmd)
-    result = []
-    for line in lines:
-        if 'packets' in line and 'bytes' in line:
-            result.append(line)
+    result = run_traffic_cmd(cmd)
     return result
 
 
 def run_internet_cmd():
     cmd = 'sudo iptaccount -l internet | grep ^IP'
-    lines = run(cmd)
-    result = []
-    for line in lines:
-        if 'packets' in line and 'bytes' in line:
-            result.append(line)
+    result = run_traffic_cmd(cmd)
+    return result
+
+
+def run_intragrp_cmd():
+    cmd = 'sudo iptaccount -l intragrp | grep ^IP'
+    result = run_traffic_cmd(cmd)
     return result
 
 
@@ -114,8 +123,25 @@ def parse_src_bytes(line):
     return line.split('bytes:')[1].split('DST')[0].strip()
 
 
+def parse_src_packets(line):
+    return line.split('packets:')[1].split('bytes')[0].strip()
+
+
 def parse_dst_bytes(line):
     return line.split('bytes:')[-1].strip()
+
+
+def parse_dst_packets(line):
+    return line.split('DST packets:')[1].split('bytes')[0].strip()
+
+
+def run_traffic_cmd(cmd):
+    lines = run(cmd)
+    result = []
+    for line in lines:
+        if 'packets' in line and 'bytes' in line:
+            result.append(line)
+    return result
 
 
 def run(cmd):
@@ -132,12 +158,16 @@ def get_host_name():
 
 
 def get_delta_value(org_dict, latest_dict):
-        # {"10.1.4.77":[src_bytes, dst_bytes], }
+        # {"10.1.4.77":[src_bytes, src_packets, dst_bytes, dst_packets], }
         delta_dict = {}
         for key, values in latest_dict.iteritems():
             if org_dict.has_key(key):
                 org_value = org_dict.get(key)
-                delta_dict[key] = [int(values[0]) - int(org_value[0]), int(values[1]) - int(org_value[1])]
+                src_bytes = int(values[0]) - int(org_value[0])
+                src_packets = int(values[1]) - int(org_value[1])
+                dst_bytes = int(values[2]) - int(org_value[2])
+                dst_packets = int(values[3]) - int(org_value[3])
+                delta_dict[key] = [src_bytes, src_packets, dst_bytes, dst_packets]
                 org_dict[key] = values
             else:
                 delta_dict[key] = values
@@ -146,6 +176,23 @@ def get_delta_value(org_dict, latest_dict):
         for key in org_dict.keys():
             if latest_dict.has_key(key) is False:
                 org_dict.pop(key)
+        return delta_dict
+
+
+def get_policy_delta_value(org_dict, latest_dict):
+        # {'qdisc_htb_1':[dropped, sent_bytes, sent_pkt], 'qdisc_pfifo_1100':[dropped, sent_bytes, sent_pkt]}
+        delta_dict = {}
+        for key, values in latest_dict.iteritems():
+            if org_dict.has_key(key):
+                org_value = org_dict.get(key)
+                dropped = int(values[0]) - int(org_value[0])
+                sent_bytes = int(values[1]) - int(org_value[1])
+                sent_pkt = int(values[2]) - int(org_value[2])
+                delta_dict[key] = [dropped, sent_bytes, sent_pkt]
+                org_dict[key] = values
+            else:
+                delta_dict[key] = values
+                org_dict[key] = values
         return delta_dict
 
 
@@ -165,8 +212,9 @@ class FireWallUserStatMon(object):
         collectd.info('%s plugin [verbose]: %s' % (self.plugin_name, msg))
 
     def init(self):
-        self.USER_BASE_LINE = get_internet_stat()
-        self.GRP_BASE_LINE = get_intergrp_stat()
+        self.INTERNET_STAT = get_internet_stat()
+        self.INTERGRP_STAT = get_intergrp_stat()
+        self.INTRAGRP_STAT = get_intragrp_stat()
         self.POLICY_BASE_LINE = get_policy_stat()
 
     def configure_callback(self, conf):
@@ -204,29 +252,44 @@ class FireWallUserStatMon(object):
 
     def read_callback(self):
         try:
-            user_latest_stat = get_internet_stat()
-            grp_latest_stat = get_intergrp_stat()
+            internet_latest_stat = get_internet_stat()
+            intergrp_latest_stat = get_intergrp_stat()
+            intragrp_latest_stat = get_intragrp_stat()
             policy_latest_stat = get_policy_stat()
-            user_delta_stat = get_delta_value(self.USER_BASE_LINE, user_latest_stat)
-            grp_delta_stat = get_delta_value(self.GRP_BASE_LINE, grp_latest_stat)
-            policy_delta_stat = get_delta_value(self.POLICY_BASE_LINE, policy_latest_stat)
+
+            internet_delta_stat = get_delta_value(self.INTERNET_STAT, internet_latest_stat)
+            intergrp_delta_stat = get_delta_value(self.INTERGRP_STAT, intergrp_latest_stat)
+            intragrp_latest_stat = get_delta_value(self.INTRAGRP_STAT, intragrp_latest_stat)
+            policy_delta_stat = get_policy_delta_value(self.POLICY_BASE_LINE, policy_latest_stat)
             host = "%s__%s__%s" % (self.account_id, self.hostname, self.vm_type)
-            # {"10.1.4.77":[src_bytes, dst_bytes], }
-            for ip, value in user_delta_stat.iteritems():
+            # {"10.1.4.77":[src_bytes, src_packets, dst_bytes, dst_packets], }
+            for ip, value in internet_delta_stat.iteritems():
                 type_instance = ip
                 plugin_instance = 'internet'
                 self.dispatch_value(self.plugin_name, host, "src_bytes", type_instance, plugin_instance, value[0])
-                self.dispatch_value(self.plugin_name, host, "dst_bytes", type_instance, plugin_instance, value[1])
-            for ip, value in grp_delta_stat.iteritems():
+                self.dispatch_value(self.plugin_name, host, "src_packets", type_instance, plugin_instance, value[1])
+                self.dispatch_value(self.plugin_name, host, "dst_bytes", type_instance, plugin_instance, value[2])
+                self.dispatch_value(self.plugin_name, host, "dst_packets", type_instance, plugin_instance, value[3])
+            for ip, value in intergrp_delta_stat.iteritems():
                 type_instance = ip
                 plugin_instance = 'intergrp'
                 self.dispatch_value(self.plugin_name, host, "src_bytes", type_instance, plugin_instance, value[0])
-                self.dispatch_value(self.plugin_name, host, "dst_bytes", type_instance, plugin_instance, value[1])
+                self.dispatch_value(self.plugin_name, host, "src_packets", type_instance, plugin_instance, value[1])
+                self.dispatch_value(self.plugin_name, host, "dst_bytes", type_instance, plugin_instance, value[2])
+                self.dispatch_value(self.plugin_name, host, "dst_packets", type_instance, plugin_instance, value[3])
+            for ip, value in intragrp_latest_stat.iteritems():
+                type_instance = ip
+                plugin_instance = 'intragrp'
+                self.dispatch_value(self.plugin_name, host, "src_bytes", type_instance, plugin_instance, value[0])
+                self.dispatch_value(self.plugin_name, host, "src_packets", type_instance, plugin_instance, value[1])
+                self.dispatch_value(self.plugin_name, host, "dst_bytes", type_instance, plugin_instance, value[2])
+                self.dispatch_value(self.plugin_name, host, "dst_packets", type_instance, plugin_instance, value[3])
             for policy_name, value in policy_delta_stat.iteritems():
                 type_instance = policy_name
                 plugin_instance = 'policy.sh'
                 self.dispatch_value(self.plugin_name, host, "dropped", type_instance, plugin_instance, value[0])
                 self.dispatch_value(self.plugin_name, host, "sent_bytes", type_instance, plugin_instance, value[1])
+                self.dispatch_value(self.plugin_name, host, "sent_pkt", type_instance, plugin_instance, value[2])
         except Exception as exp:
             self.log_verbose(traceback.print_exc())
             self.log_verbose("plugin %s run into exception" % (self.plugin_name))
@@ -234,9 +297,35 @@ class FireWallUserStatMon(object):
 
 
 if __name__ == '__main__':
+    print "************\n"
     # print str(get_intergrp_stat())
+    # print "***********\n"
     # print str(get_internet_stat())
-    print str(get_policy_stat())
+    # print "************\n"
+    # print str(get_intragrp_stat())
+    # print "**********\n"
+    # print str(get_policy_stat())
+    # print '------------------\n'
+    a = get_internet_stat()
+    print a
+    import time
+    time.sleep(10)
+    print '------------------\n'
+    b = get_internet_stat()
+    c = get_delta_value(a, b)
+    print '---delta value----'
+    print c
+
+    print "*********policy*****"
+    a = get_policy_stat()
+    print a
+    import time
+    time.sleep(10)
+    print '------------------\n'
+    b = get_policy_stat()
+    c = get_policy_delta_value(a, b)
+    print '---delta value----'
+    print c
 else:
     import collectd
     firewall_status = FireWallUserStatMon()

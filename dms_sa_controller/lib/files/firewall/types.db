@@ -272,6 +272,9 @@ by_memory               value:GAUGE:0:U
 
 # firewall
 src_bytes               value:GAUGE:0:U
+src_packets             value:GAUGE:0:U
 dst_bytes               value:GAUGE:0:U
+dst_packets             value:GAUGE:0:U
 dropped               value:GAUGE:0:U
 sent_bytes            value:GAUGE:0:U
+sent_pkt              value:GAUGE:0:U

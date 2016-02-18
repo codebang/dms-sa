@@ -54,6 +54,7 @@ class JobBuilder:
                     continue
                 for step in WF:
                     step.attach(job)
+                print job.to_xml()
                 jobs.append(job)
         return jobs
 

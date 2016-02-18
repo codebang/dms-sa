@@ -1,0 +1,17 @@
+{
+        "network": {
+                "servers": ["{{logstash_ip}}:{{logstash_receiver_port}}"],
+                "transport": "tcp"
+        },
+        "files": [
+                {
+                        "paths": ["/var/log/messages"],
+                        "fields": {"type": "vpnlog"},
+                        "codec": {
+                                "name": "filter",
+                                "patterns": [".*pluto.*"]
+                        }
+
+                }
+        ]
+}

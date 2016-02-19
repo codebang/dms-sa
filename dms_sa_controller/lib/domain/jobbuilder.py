@@ -82,6 +82,9 @@ class JobBuilder:
             context[svc.name] = {}
 
         for svc in svclist:
+            if svc.name == "vpc":
+                logger.info("build sa jobs--skip the vpc")
+                continue
             svcdef = modelmgr.getsvfdefbyname(svc.name)
             sn = svcdef.service_neighbors
             mn = svcdef.manage_neighbors

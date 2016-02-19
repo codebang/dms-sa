@@ -86,6 +86,8 @@ if __name__ == '__main__':
       nodes = sm().query(Node).all()
       dict={}
       for node in nodes:
+          if node.service.name == "vpc":
+            continue
           node_map = {}
           dict[node.manageip] = node_map
           node_map["username"] = node.service.os
@@ -93,5 +95,6 @@ if __name__ == '__main__':
           node_map["description"] = "accountname(%s)vmtype(%s)" % (node.service.tenant.name,node.service.name)
           node_map["tags"] = node.service.tenant.id
           node_map["hostname"] = node.manageip
+          node_map["nodename"] = node.manageip + "(" + node.vmtype + ")"
       sm.close_all()
       print yaml.dump(dict,default_flow_style=False)

@@ -35,8 +35,9 @@ def run_table_1_cmd(table_id=1):
 def parse_table_1_line(line):
     dl_src = line.split('dl_src=')[1].split(',')[0].strip()
     n_bytes = line.split('n_bytes=')[1].split(',')[0].strip()
-    # ['ac:bc:32:8a:11:90', 0]
-    return [dl_src, n_bytes]
+    n_packets = line.split('n_packets=')[1].split(',')[0].strip()
+    # ['ac:bc:32:8a:11:90', 0, 0]
+    return [dl_src, n_bytes, n_packets]
 
 
 def parse_table_1(table_id=1):
@@ -47,12 +48,15 @@ def parse_table_1(table_id=1):
         # dl_src as the key, need to add the value with the same key
         dl_src = info[0]
         n_bytes = int(info[1])
+        n_packets = int(info[2])
         if stat_dict.has_key(dl_src):
-            value = stat_dict.get(dl_src) + n_bytes
-            stat_dict[dl_src] = value
+            value = stat_dict.get(dl_src)
+            n_bytes = value[0] + n_bytes
+            n_packets = value[1] + n_packets
+            stat_dict[dl_src] = [n_bytes, n_packets]
         else:
-            stat_dict[dl_src] = n_bytes
-    # {"ac:bc:32:8a:11:90":0, }
+            stat_dict[dl_src] = [n_bytes, n_packets]
+    # {"ac:bc:32:8a:11:90":[0, 0]}
     return stat_dict
 
 
@@ -69,9 +73,10 @@ def run_table_6_cmd(table_id=6):
 
 def parse_table_6_line(line):
     mod_dl_dst = line.split('mod_dl_dst:')[1].split(',')[0].strip()
-    n_bytes = line.split('n_bytes=')[1].split(',')[0]
-    #['08:10:27:31:4f:60', 0]
-    return [mod_dl_dst, n_bytes]
+    n_bytes = line.split('n_bytes=')[1].split(',')[0].strip()
+    n_packets = line.split('n_packets=')[1].split(',')[0].strip()
+    #['08:10:27:31:4f:60', 0, 0]
+    return [mod_dl_dst, n_bytes, n_packets]
 
 
 def parse_table_6(table_id=6):
@@ -81,12 +86,15 @@ def parse_table_6(table_id=6):
         info = parse_table_6_line(line)
         mod_dl_dst = info[0]
         n_bytes = int(info[1])
+        n_packets = int(info[2])
         if stat_dict.has_key(mod_dl_dst):
-            value = stat_dict.get(mod_dl_dst) + n_bytes
-            stat_dict[mod_dl_dst] = value
+            value = stat_dict.get(mod_dl_dst)
+            n_bytes = value[0] + n_bytes
+            n_packets = value[1] + n_packets
+            stat_dict[mod_dl_dst] = [n_bytes, n_packets]
         else:
-            stat_dict[mod_dl_dst] = n_bytes
-    # {"08:10:27:31:4f:60":0, }
+            stat_dict[mod_dl_dst] = [n_bytes, n_packets]
+    # {"08:10:27:31:4f:60":[0,0] }
     return stat_dict
 
 
@@ -95,12 +103,12 @@ def get_host_name():
 
 
 def get_delta_value(org_dict, latest_dict):
-        # {"ac:bc:32:8a:11:90":0, }
+        # {"ac:bc:32:8a:11:90":[0,0] }
         delta_dict = {}
         for key, value in latest_dict.iteritems():
             if org_dict.has_key(key):
                 org_value = org_dict.get(key)
-                delta_dict[key] = value - org_value
+                delta_dict[key] = [value[0] - org_value[0], value[1] - org_value[1]]
                 org_dict[key] = value
             else:
                 delta_dict[key] = value
@@ -175,11 +183,13 @@ class VRouterTrafficStatMon(object):
             in_delta_stat = get_delta_value(self.IN_BASE_LINE, in_latest_stat)
             out_delta_stat = get_delta_value(self.OUT_BASE_LINE, out_latest_stat)
             host = "%s__%s__%s" % (self.account_id, self.hostname, self.vm_type)
-            # {"ac:bc:32:8a:11:90":0, }
+            # {"ac:bc:32:8a:11:90":[0,0] }
             for key, value in in_delta_stat.iteritems():
-                self.dispatch_value(self.plugin_name, host, "dl_src_n_bytes", key, value)
+                self.dispatch_value(self.plugin_name, host, "dl_src_n_bytes", key, value[0])
+                self.dispatch_value(self.plugin_name, host, "dl_src_n_packets", key, value[1])
             for key, value in out_delta_stat.iteritems():
-                self.dispatch_value(self.plugin_name, host, "mod_dl_dst_n_bytes", key, value)
+                self.dispatch_value(self.plugin_name, host, "mod_dl_dst_n_bytes", key, value[0])
+                self.dispatch_value(self.plugin_name, host, "mod_dl_dst_n_packets", key, value[1])
         except Exception as exp:
             self.log_verbose(traceback.print_exc())
             self.log_verbose("plugin %s run into exception" % self.plugin_name)
@@ -187,8 +197,22 @@ class VRouterTrafficStatMon(object):
 
 
 if __name__ == '__main__':
-    print str(parse_table_1(1))
-    print str(parse_table_6(6))
+    stat_1_1 = parse_table_1(1)
+    stat_6_1 = parse_table_6(6)
+    print '***********'
+    print stat_1_1
+    print stat_6_1
+    import time
+    time.sleep(5)
+    stat_1_2 = parse_table_1(1)
+    stat_6_2 = parse_table_6(6)
+    print '***********'
+    print stat_1_2
+    print stat_6_2
+
+    print '***********'
+    print get_delta_value(stat_1_1, stat_1_2)
+    print get_delta_value(stat_6_1, stat_6_2)
 else:
     import collectd
     vrouter_status = VRouterTrafficStatMon()

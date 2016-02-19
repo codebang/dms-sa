@@ -54,8 +54,11 @@ class Service(TableNameConvention,TimestampMixin,Base):
     def isready(self):
         if len(self.nodes) == self.instancecount:
             return True
+        elif self.name == "vpc":
+            return True
         else:
             return False
+
     def createnode(self):
         node = Node()
         node.serviceid = self.id

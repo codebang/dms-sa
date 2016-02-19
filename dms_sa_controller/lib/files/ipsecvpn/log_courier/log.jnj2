@@ -6,7 +6,7 @@
         "files": [
                 {
                         "paths": ["/var/log/messages"],
-                        "fields": {"type": "vpnlog"},
+                        "fields": {"vmtype": "vpn"},
                         "codec": {
                                 "name": "filter",
                                 "patterns": [".*pluto.*"]

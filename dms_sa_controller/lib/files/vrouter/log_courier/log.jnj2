@@ -10,6 +10,6 @@
                     "what": "previous",
                     "previous timeout": "3s"
                 },
-        "fields": { "type": "vrlog" }
+        "fields": { "vmtype": "vr" }
     }
 }

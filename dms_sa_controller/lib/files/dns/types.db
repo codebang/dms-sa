@@ -263,6 +263,8 @@ n_packets                              value:GAUGE:0:U
 n_bytes                                value:GAUGE:0:U
 mod_dl_dst_n_bytes                     value:GAUGE:0:U
 dl_src_n_bytes                         value:GAUGE:0:U
+mod_dl_dst_n_packets                    value:GAUGE:0:U
+dl_src_n_packets                        value:GAUGE:0:U
 rx_drop                 value:GAUGE:0:U
 rx_errs                 value:GAUGE:0:U
 tx_drop                 value:GAUGE:0:U

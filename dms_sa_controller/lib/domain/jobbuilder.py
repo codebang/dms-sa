@@ -40,6 +40,8 @@ class JobBuilder:
         jobs = []
 
         for svc in svclist:
+            if svc.name == "vpc":
+                continue
             nodes = svc.nodes
             for node in nodes:
                 job = Job()

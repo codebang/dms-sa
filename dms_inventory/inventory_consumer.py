@@ -54,3 +54,6 @@ class KafkaCollector():
         reader = avro.io.DatumReader(self.schema)
         message = reader.read(decoder)
         return message
+if __name__ == '__main__':
+    kafka_runner = KafkaCollector()
+    kafka_runner.run()

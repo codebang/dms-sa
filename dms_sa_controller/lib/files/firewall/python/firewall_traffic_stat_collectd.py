@@ -12,7 +12,7 @@ class CmdError(Exception):
 
 
 def run_policy_cmd():
-    cmd = "sudo policy.sh show"
+    cmd = "sudo policy.sh -s"
     lines = run(cmd)
     output = []
     index = None

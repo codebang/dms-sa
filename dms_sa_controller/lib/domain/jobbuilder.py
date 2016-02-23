@@ -30,8 +30,29 @@ class JobBuilder:
         sched.add_job(checksvc,args=(accountid,),run_date=runtime)
 
     @classmethod
-    def buildmonitorcpejob(cls,service):
-        pass
+    def buildmonitorcpejob(cls,tenant):
+        ctx = ServiceContext()
+        config = ctx.getConfigService()
+        host = config.get("monitorcpe","host")
+        cmd = config.get("monitorcpe","command")
+        lockcmd = config.get("monitorcpe","getlock")
+        releasecmd = config.get("monitorcpe","releaselock")
+        svclist = tenant.services
+        for svc in svclist:
+            if svc.name == "vrouter":
+                nodes = svc.nodes
+                for node in nodes:
+                    job = Job()
+                    job.node = node
+                    job.setNodeFilter(host)
+                    job.setGroup(tenant.id)
+                    job.setName("MonitorCPETest")
+                    job.addlocalcommand(lockcmd)
+                    job.addcommand(cmd + " -c 6620e868-e9df-4c8d-8c74-87fe364f7222 -l 10.74.113.116 -r 10.74.113.117 -x 204 -y 205")
+                    return job
+
+
+        return None
 
     @classmethod
     def buildsaenablejobs(cls,tenant):

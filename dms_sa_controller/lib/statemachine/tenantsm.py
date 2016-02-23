@@ -89,10 +89,41 @@ def vmcreate(e):
 def monitorcpe(e):
     tenant = e.tenant
     job = JobBuilder.buildmonitorcpejob(tenant)
-#    rundeck_client = Rundeck()
+    rundeck_client = Rundeck()
+    session = object_session(tenant)
+    if job is None:
+        logger.error("monitor cpe job build failded")
+        return
+    try:
+        rundeck_reponse = rundeck_client.import_job(job.to_xml(),fmt = "xml", dupeOption = "create" , project = "dms-sa", uuidOption = "remove")
+    except:
+        logger.error("import account(%s) job failed, for connection reason" % tenant.id)
+        session.flush()
+        return
+
+    if rundeck_reponse['failed'] == None and rundeck_reponse['skipped'] == None:
+        print rundeck_reponse
+        id = rundeck_reponse['succeeded'][0]["id"]
+        name = rundeck_reponse['succeeded'][0]["name"]
+        rdjob = job.node.createrdjob(name,id)
+        session.add(rdjob)
+        try:
+            ret = rundeck_client.run_job(rdjob.jobid)
+        except Exception,e:
+            logger.error("runjob (%s) error (%s)" % (rdjob.jobid,e.message))
+            rdjob.jobstate = "runerror"
+        else:
+            status = ret['status']
+            if status == 'falied':
+                rdjob.jobstate = "runerror"
+                href = ret["href"]
+                logger.error("job run error , the execution link: (%s)" % href)
+            else:
+                rdjob.jobstate = "runsuccess"
+        session.flush()
+
 #    runjob(rundeck_client,job)
     #TDB: whether to wait for monitor cpe done
-    session = object_session(tenant)
     tenant.state = e.fsm.current
     tenant.getSM().trigger("monitor_cpe_done",tenant=tenant)
     session.commit()
@@ -103,7 +134,6 @@ def saprovisioning(e):
     tenant = e.tenant
     jobs = JobBuilder.buildsaenablejobs(tenant)
     session = object_session(tenant)
-    logger.info("buildsaenablejobs")
     rundeck_client = ServiceContext().getRdClient()
     for job in jobs:
         try:

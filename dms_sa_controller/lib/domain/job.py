@@ -69,7 +69,7 @@ class Job(object):
                 }]
      }
     self.definition['joblist'][0][self.sequence_key] = []
-  
+
   def _addsequence(self,dict):
     self.definition['joblist'][0][self.sequence_key].append(dict)
 
@@ -79,6 +79,10 @@ class Job(object):
  
   def addcommand(self,cmd):
     dict = {"exec": cmd}
+    self._addsequence(dict)
+
+  def addlocalcommand(self,cmd):
+    dict = {'node-step-plugin': {"type": "localexec","configuration":[{"key":"command","value":cmd}]}}
     self._addsequence(dict)
 
   def setdesc(self,desp):

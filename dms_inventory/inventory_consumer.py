@@ -26,7 +26,7 @@ avro_schema = """
 
 
 class KafkaCollector():
-    def initialize(self):
+    def __init__(self):
         self.app_home = os.path.dirname(os.path.abspath(__file__))
         os.chdir(self.app_home)
         self.config = SafeConfigParser()
@@ -34,8 +34,8 @@ class KafkaCollector():
         self.config.read(config_file)
         self.kafka_host = self.config.get("Kafka","kafka_broker")
         self.kafka_topic = self.config.get("Kafka","kafka_topic")
-        self.kafka_group = self.config.get("Kakfa","kafka_group")
-        self.consumer = KafkaConsumer(self.kafka_topic,self.kafka_group,bootstrap_server=[self.kafka_host])
+        self.kafka_group = self.config.get("Kafka","kafka_group")
+        self.consumer = KafkaConsumer(self.kafka_topic,self.kafka_group,bootstrap_servers=[self.kafka_host])
 
     def run(self):
         client = ConnectFactory().getConnect("redis",self.config)

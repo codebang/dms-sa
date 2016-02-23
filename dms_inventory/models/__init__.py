@@ -65,10 +65,10 @@ class Host(Model):
 
     def fromMap(self,data):
         self.groupName = data.get("groupName",None)
-        self.mac = data["mac"]
-        self.user_id = data["userID"]
+        self.mac = data.get("mac",None)
+        self.user_id = data.get("userID",None)
         self.user_name = data.get("user_name",None)
-        self.ip = data["ip"]
+        self.ip = data.get("ip",None)
         #TUNNELHOST or SERVER
         self.type = data["type"]
 
@@ -88,21 +88,25 @@ class User(Model):
         super(User,self).__init__(map)
 
     def fromMap(self,data):
-        self.group_name = data["groupName"]
-        self.user_name = data["name"]
-        self.group_id = data["groupId"]
-        self.user_id = data["id"]
+        self.group_name = data.get("groupName",None)
+        self.user_name = data.get("name",None)
+        self.group_id = data.get("groupId",None)
+        self.user_id = data.get("id",None)
 
     def execute(self,client):
-        pass
+        key_Group = self.accountId + "_" + self.user_name + "_Group"
+        if self.operation == "create" or self.operation == "update":
+            client.set(key_Group,self.group_name)
+        elif self.operation == "delete":
+            client.delete(key_Group)
         
 class VPN(Model):
     def __init__(self,map):
         super(VPN, self).__init__(map)
 
     def fromMap(self,data):
-        self.userName = data["userName"]
-        self.ip = data["ip"]
+        self.userName = data.get("userName",None)
+        self.ip = data.get("ip")
 
     def execute(self,client):
         key_User = self.accountId + "_" + self.ip + "_User"

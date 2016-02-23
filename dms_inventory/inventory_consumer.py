@@ -36,6 +36,7 @@ class KafkaCollector():
         self.kafka_topic = self.config.get("Kafka","kafka_topic")
         self.kafka_group = self.config.get("Kafka","kafka_group")
         self.consumer = KafkaConsumer(self.kafka_topic,self.kafka_group,bootstrap_servers=[self.kafka_host])
+        self.schema = avro.schema.parse(avro_schema)
 
     def run(self):
         client = ConnectFactory().getConnect("redis",self.config)

@@ -1,3 +1,5 @@
+import redis
+
 def singleton(cls):
     instances = {}
     def _singleton():
@@ -9,5 +11,11 @@ def singleton(cls):
 
 @singleton
 class ConnectFactory(object):
-    def getConnect(self,conn_type):
+    def getConnect(self,conn_type,config):
+        if conn_type == "redis":
+            host = config.get("redis","host")
+            port = config.get("redis","port")
+            rd = redis.Redis(host,port)
+            rd.delete()
+            return redis.Redis(host,port)
         pass

@@ -6,6 +6,8 @@ import avro.schema
 import io
 import json
 from models import ObjectFactory
+from connects import ConnectFactory
+from util import logger
 
 
 avro_schema = """
@@ -36,12 +38,12 @@ class KafkaCollector():
         self.consumer = KafkaConsumer(self.kafka_topic,self.kafka_group,bootstrap_server=[self.kafka_host])
 
     def run(self):
-
+        client = ConnectFactory.getConnect("redis",self.config)
         for msg in self.consumer:
             kafkamsg = self._decodemsg(msg)
             try:
                 jsondata = json.loads(kafkamsg['rawdata'])
-                ObjectFactory.fromjson(jsondata["message"]).execute()
+                ObjectFactory.fromjson(jsondata["message"]).execute(client)
             except:
                 self.error("message format is invalid(%s)" % jsondata)
 
@@ -54,6 +56,7 @@ class KafkaCollector():
         reader = avro.io.DatumReader(self.schema)
         message = reader.read(decoder)
         return message
+
 if __name__ == '__main__':
     kafka_runner = KafkaCollector()
     kafka_runner.run()

@@ -12,12 +12,12 @@ class CmdError(Exception):
 
 
 def run_policy_cmd():
-    cmd = "sudo policy.sh show"
+    cmd = "sudo policy.sh -s"
     lines = run(cmd)
     output = []
     index = None
     for idx, line in enumerate(lines):
-        if 'qdiscs statistics' in line:
+        if 'qdisc stats' in line:
             index = idx
             break
     index += 1

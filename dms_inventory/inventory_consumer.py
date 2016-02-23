@@ -43,8 +43,10 @@ class KafkaCollector():
         for msg in self.consumer:
             kafkamsg = self._decodemsg(msg)
             try:
+                logger.info("message handling(%s)" % jsondata)
                 jsondata = json.loads(kafkamsg['rawdata'])
                 ObjectFactory.fromjson(jsondata["message"]).execute(client)
+
             except:
                 logger.error("message execute error(%s)" % jsondata)
 

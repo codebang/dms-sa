@@ -74,10 +74,10 @@ class Host(Model):
 
     def execute(self,client):
         key_User = self.accountId + "_" + self.ip + "_User"
-        key_Mac = self.accountId + "_" + self.ip + "_Mac"
+        key_Mac = self.accountId + "_" + self.mac + "_User"
         if self.operation == "create" or self.operation == "update":
             client.set(key_User,self.user_name)
-            client.set(key_Mac,self.mac)
+            client.set(key_Mac,self.user_name)
         elif self.operation == "delete":
             client.delete(key_User)
             client.delete(key_Mac)

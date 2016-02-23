@@ -38,7 +38,7 @@ class KafkaCollector():
         self.consumer = KafkaConsumer(self.kafka_topic,self.kafka_group,bootstrap_server=[self.kafka_host])
 
     def run(self):
-        client = ConnectFactory.getConnect("redis",self.config)
+        client = ConnectFactory().getConnect("redis",self.config)
         for msg in self.consumer:
             kafkamsg = self._decodemsg(msg)
             try:

@@ -182,7 +182,7 @@ class VPNMetric(object):
         return metrics_dict
 
 
-def test_get_delta_stat(self, org_stat, latest_stat):
+def test_get_delta_stat(org_stat, latest_stat):
         delta_stat = {}
         for key, value in latest_stat.iteritems():
             if org_stat.has_key(key):
@@ -203,8 +203,12 @@ def test_get_delta_stat(self, org_stat, latest_stat):
 
 
 def pick_field(org_str, first_separator, second_separator, first_index=1, second_index=0):
-    field = org_str.split(first_separator)[first_index].split(second_separator)[second_index]
-    return field
+    try:
+        field = org_str.split(first_separator)[first_index].split(second_separator)[second_index]
+        return field
+    except:
+        # sometimes there is no packets of bytes info for out
+        return 0
 
 
 def get_host_name():

@@ -111,7 +111,6 @@ def monitorcpe(e):
             ret = rundeck_client.run_job(rdjob.jobid)
         except Exception,e:
             logger.error("runjob (%s) error (%s)" % (rdjob.jobid,e.message))
-            rdjob.jobstate = "runerror"
         else:
             status = ret['status']
             if status == 'falied':

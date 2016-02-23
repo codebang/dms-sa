@@ -85,6 +85,14 @@ if __name__ == '__main__':
       sm = sessionmaker(bind=engine)
       nodes = sm().query(Node).all()
       dict={}
+      monitorcpe_map={}
+      monitorcpe_map["username"]='fedora'
+      monitorcpe_map["os"]='fedora'
+      monitorcpe_map["description"]="cpe monitor vm for health test"
+      monitorcpe_map["tags"]="cpe"
+      monitorcpe_map["hostname"]="172.16.0.201"
+      monitorcpe_map["nodename"]="172.16.0.201(cpe)"
+      dict["172.16.0.201"]=monitorcpe_map
       for node in nodes:
           if node.service.name == "vpc":
             continue

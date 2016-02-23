@@ -89,7 +89,7 @@ def vmcreate(e):
 def monitorcpe(e):
     tenant = e.tenant
     job = JobBuilder.buildmonitorcpejob(tenant)
-    rundeck_client = Rundeck()
+    rundeck_client = ServiceContext().getRdClient()
     session = object_session(tenant)
     if job is None:
         logger.error("monitor cpe job build failded")

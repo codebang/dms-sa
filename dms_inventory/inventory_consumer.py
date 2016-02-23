@@ -46,7 +46,7 @@ class KafkaCollector():
                 jsondata = json.loads(kafkamsg['rawdata'])
                 ObjectFactory.fromjson(jsondata["message"]).execute(client)
             except:
-                self.error("message format is invalid(%s)" % jsondata)
+                logger.error("message execute error(%s)" % jsondata)
 
 
 

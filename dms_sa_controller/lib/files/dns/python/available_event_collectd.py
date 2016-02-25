@@ -139,6 +139,14 @@ class FPingMon(object):
             return
         collectd.info('%s plugin [verbose]: %s ' % (self.plugin_name, msg))
 
+    @staticmethod
+    def handle_special_letter(line):
+        line = line.strip()
+        if line.endswith(','):
+            line = line[:-1]
+        return line
+
+
     def configure_callback(self, conf):
         for node in conf.children:
             val = str(node.values[0])
@@ -150,7 +158,7 @@ class FPingMon(object):
             elif node.key == 'PluginName':
                 self.plugin_name = val
             elif node.key == 'Neighbours':
-                self.neighbours = val.split(',')
+                self.neighbours = self.handle_special_letter(val).split(',')
             elif node.key == "KafkaClient":
                 self.kafka_client = val
             elif node.key == "KafkaTopic":

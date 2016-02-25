@@ -60,8 +60,7 @@ def parse_policy_stats(line):
     dropped = line.split('dropped')[1].split(',')[0].strip()
     sent_bytes = line.split('bytes')[0].strip().replace('Sent','').strip()
     sent_pkt = line.split('pkt')[0].strip().split('bytes')[1].strip()
-    overlimits = line.split('overlimits')[0].strip().split('requeues')[1].strip()
-    return [dropped, sent_bytes, sent_pkt, overlimits]
+    return [dropped, sent_bytes, sent_pkt]
 
 
 def run(cmd):
@@ -78,8 +77,8 @@ def get_host_name():
 
 
 def get_policy_delta_value(org_dict, latest_dict):
-        # {'qdisc_htb_1':[dropped, sent_bytes, sent_pkt, overlimits],
-        # 'qdisc_pfifo_1100':[dropped, sent_bytes, sent_pkt, overlimits]}
+        # {'qdisc_htb_1':[dropped, sent_bytes, sent_pkt],
+        # 'qdisc_pfifo_1100':[dropped, sent_bytes, sent_pkt]}
         delta_dict = {}
         for key, values in latest_dict.iteritems():
             if org_dict.has_key(key):
@@ -87,8 +86,7 @@ def get_policy_delta_value(org_dict, latest_dict):
                 dropped = int(values[0]) - int(org_value[0])
                 sent_bytes = int(values[1]) - int(org_value[1])
                 sent_pkt = int(values[2]) - int(org_value[2])
-                overlimits = int(values[3]) - int(org_value[3])
-                delta_dict[key] = [dropped, sent_bytes, sent_pkt, overlimits]
+                delta_dict[key] = [dropped, sent_bytes, sent_pkt]
                 org_dict[key] = values
             else:
                 delta_dict[key] = values
@@ -152,14 +150,13 @@ class FirewallQosStatMon(object):
             policy_latest_stat = get_policy_stat()
             policy_delta_stat = get_policy_delta_value(self.POLICY_BASE_LINE, policy_latest_stat)
             host = "%s__%s__%s" % (self.account_id, self.hostname, self.vm_type)
-            # {'qdisc_htb_1':[dropped, sent_bytes, sent_pkt, overlimits], }
+            # {'qdisc_htb_1':[dropped, sent_bytes, sent_pkt], }
             for policy_name, value in policy_delta_stat.iteritems():
                 type_instance = policy_name
                 plugin_instance = 'policy.sh'
                 self.dispatch_value(self.plugin_name, host, "dropped", type_instance, plugin_instance, value[0])
                 self.dispatch_value(self.plugin_name, host, "sent_bytes", type_instance, plugin_instance, value[1])
                 self.dispatch_value(self.plugin_name, host, "sent_pkt", type_instance, plugin_instance, value[2])
-                self.dispatch_value(self.plugin_name, host, "overlimits", type_instance, plugin_instance, value[3])
         except Exception as exp:
             self.log_verbose(traceback.print_exc())
             self.log_verbose("plugin %s run into exception" % (self.plugin_name))

@@ -130,6 +130,7 @@ class FireWallUserStatMon(object):
     def __init__(self):
         self.plugin_name = "firewall_traffic_stat"
         self.interval = 5
+        self.interval_float = 5.0
         self.hostname = get_host_name()
         self.interfaces = ""
         self.verbose_logging = False
@@ -142,9 +143,10 @@ class FireWallUserStatMon(object):
         collectd.info('%s plugin [verbose]: %s' % (self.plugin_name, msg))
 
     def init(self):
-        self.INTERNET_STAT = get_internet_stat()
-        self.INTERGRP_STAT = get_intergrp_stat()
-        self.INTRAGRP_STAT = get_intragrp_stat()
+        pass
+        # self.INTERNET_STAT = get_internet_stat()
+        # self.INTERGRP_STAT = get_intergrp_stat()
+        # self.INTRAGRP_STAT = get_intragrp_stat()
 
     def configure_callback(self, conf):
         for node in conf.children:
@@ -154,6 +156,7 @@ class FireWallUserStatMon(object):
                 self.hostname = val
             elif node.key == 'Interval':
                 self.interval = int(float(val))
+                self.interval_float = float(val)
             elif node.key == 'Verbose':
                 self.verbose_logging = val in ['True', 'true']
             elif node.key == 'PluginName':
@@ -198,6 +201,11 @@ class FireWallUserStatMon(object):
                 self.dispatch_value(self.plugin_name, host, "src_packets", type_instance, plugin_instance, value[1])
                 self.dispatch_value(self.plugin_name, host, "dst_bytes", type_instance, plugin_instance, value[2])
                 self.dispatch_value(self.plugin_name, host, "dst_packets", type_instance, plugin_instance, value[3])
+
+                self.dispatch_value("firewall_traffic_rate_stat", host, "src_bytes", type_instance, plugin_instance, value[0]/self.interval_float)
+                self.dispatch_value("firewall_traffic_rate_stat", host, "src_packets", type_instance, plugin_instance, value[1]/self.interval_float)
+                self.dispatch_value("firewall_traffic_rate_stat", host, "dst_bytes", type_instance, plugin_instance, value[2]/self.interval_float)
+                self.dispatch_value("firewall_traffic_rate_stat", host, "dst_packets", type_instance, plugin_instance, value[3]/self.interval_float)
             for ip, value in intergrp_latest_stat.iteritems():
             # for ip, value in intergrp_delta_stat.iteritems():
                 type_instance = ip
@@ -206,6 +214,11 @@ class FireWallUserStatMon(object):
                 self.dispatch_value(self.plugin_name, host, "src_packets", type_instance, plugin_instance, value[1])
                 self.dispatch_value(self.plugin_name, host, "dst_bytes", type_instance, plugin_instance, value[2])
                 self.dispatch_value(self.plugin_name, host, "dst_packets", type_instance, plugin_instance, value[3])
+
+                self.dispatch_value("firewall_traffic_rate_stat", host, "src_bytes", type_instance, plugin_instance, value[0]/self.interval_float)
+                self.dispatch_value("firewall_traffic_rate_stat", host, "src_packets", type_instance, plugin_instance, value[1]/self.interval_float)
+                self.dispatch_value("firewall_traffic_rate_stat", host, "dst_bytes", type_instance, plugin_instance, value[2]/self.interval_float)
+                self.dispatch_value("firewall_traffic_rate_stat", host, "dst_packets", type_instance, plugin_instance, value[3]/self.interval_float)
             for ip, value in intragrp_latest_stat.iteritems():
             # for ip, value in intragrp_delta_stat.iteritems():
                 type_instance = ip
@@ -214,6 +227,11 @@ class FireWallUserStatMon(object):
                 self.dispatch_value(self.plugin_name, host, "src_packets", type_instance, plugin_instance, value[1])
                 self.dispatch_value(self.plugin_name, host, "dst_bytes", type_instance, plugin_instance, value[2])
                 self.dispatch_value(self.plugin_name, host, "dst_packets", type_instance, plugin_instance, value[3])
+
+                self.dispatch_value("firewall_traffic_rate_stat", host, "src_bytes", type_instance, plugin_instance, value[0]/self.interval_float)
+                self.dispatch_value("firewall_traffic_rate_stat", host, "src_packets", type_instance, plugin_instance, value[1]/self.interval_float)
+                self.dispatch_value("firewall_traffic_rate_stat", host, "dst_bytes", type_instance, plugin_instance, value[2]/self.interval_float)
+                self.dispatch_value("firewall_traffic_rate_stat", host, "dst_packets", type_instance, plugin_instance, value[3]/self.interval_float)
         except Exception as exp:
             self.log_verbose(traceback.print_exc())
             self.log_verbose("plugin %s run into exception" % (self.plugin_name))

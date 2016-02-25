@@ -249,6 +249,8 @@ rx_dropped              value:GAUGE:0:U
 tx_dropped              value:GAUGE:0:U
 rx_errors              value:GAUGE:0:U
 tx_errors              value:GAUGE:0:U
+rx_packets              value:GAUGE:0:U
+tx_packets              value:GAUGE:0:U
 
 # vpn usage
 in_packets               value:GAUGE:0:U
@@ -282,3 +284,4 @@ dst_packets             value:GAUGE:0:U
 dropped               value:GAUGE:0:U
 sent_bytes            value:GAUGE:0:U
 sent_pkt              value:GAUGE:0:U
+overlimits            value:GAUGE:0:U

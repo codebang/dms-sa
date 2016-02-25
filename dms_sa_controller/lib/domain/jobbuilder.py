@@ -49,6 +49,7 @@ class JobBuilder:
                     job.setName("MonitorCPETest")
                     job.addlocalcommand(lockcmd)
                     job.addcommand(cmd + " -c 6620e868-e9df-4c8d-8c74-87fe364f7222 -l 10.74.113.116 -r 10.74.113.117 -x 204 -y 205")
+                    job.addcommand(releasecmd)
                     return job
 
 

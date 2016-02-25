@@ -21,7 +21,16 @@ def run(cmd):
         raise CmdError("failed to execute command: %s, reason: %s" % (' '.join(cmd), err.message))
 
 
-def run_table_1_cmd(table_id=1):
+def run_table_in_cmd(table_id="1,2"):
+    in_ids = table_id.split(",")
+    result = []
+    for id in in_ids:
+        temp = run_table_1_cmd(id)
+        result.extend(temp)
+    return result
+
+
+def run_table_1_cmd(table_id):
     table = 'table=%s' % table_id
     cmd = 'sudo ovs-ofctl dump-flows br-router %s | grep %s | grep dl_src' % (table, table)
     lines = run(cmd)
@@ -40,8 +49,8 @@ def parse_table_1_line(line):
     return [dl_src, n_bytes, n_packets]
 
 
-def parse_table_1(table_id=1):
-    output_lines = run_table_1_cmd(table_id)
+def parse_table_in(table_id="1,2"):
+    output_lines = run_table_in_cmd(table_id)
     stat_dict = {}
     for line in output_lines:
         info = parse_table_1_line(line)
@@ -125,7 +134,7 @@ class VRouterTrafficStatMon(object):
         self.plugin_name = "vrouter_traffic_stat"
         self.interval = 5
         self.hostname = get_host_name()
-        self.table_in_id = 1
+        self.table_in_id = "1,2"
         self.table_out_id = 6
         self.verbose_logging = False
         self.account_id = None
@@ -137,7 +146,7 @@ class VRouterTrafficStatMon(object):
         collectd.info('%s plugin [verbose]: %s' % (self.plugin_name, msg))
 
     def init(self):
-        self.IN_BASE_LINE = parse_table_1(self.table_in_id)
+        self.IN_BASE_LINE = parse_table_in(self.table_in_id)
         self.OUT_BASE_LINE = parse_table_6(self.table_out_id)
 
     def configure_callback(self, conf):
@@ -178,7 +187,7 @@ class VRouterTrafficStatMon(object):
 
     def read_callback(self):
         try:
-            in_latest_stat = parse_table_1(self.table_in_id)
+            in_latest_stat = parse_table_in(self.table_in_id)
             out_latest_stat = parse_table_6(self.table_out_id)
             in_delta_stat = get_delta_value(self.IN_BASE_LINE, in_latest_stat)
             out_delta_stat = get_delta_value(self.OUT_BASE_LINE, out_latest_stat)
@@ -197,14 +206,14 @@ class VRouterTrafficStatMon(object):
 
 
 if __name__ == '__main__':
-    stat_1_1 = parse_table_1(1)
+    stat_1_1 = parse_table_in("1,2")
     stat_6_1 = parse_table_6(6)
     print '***********'
     print stat_1_1
     print stat_6_1
     import time
     time.sleep(5)
-    stat_1_2 = parse_table_1(1)
+    stat_1_2 = parse_table_in("1,2")
     stat_6_2 = parse_table_6(6)
     print '***********'
     print stat_1_2

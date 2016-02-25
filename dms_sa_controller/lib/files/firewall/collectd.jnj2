@@ -984,6 +984,7 @@ LoadPlugin write_kafka
     Import "interface_stat_collectd"
     Import "firewall_traffic_stat_collectd"
     Import "firewall_qos_stat_collectd"
+    Import "firewall_traffic_rate_stat_collectd"
 #    <Module available_event_collectd>
 #        Interval {{avail_interval}}
 #        PluginName "available_event"
@@ -1036,6 +1037,14 @@ LoadPlugin write_kafka
     <Module firewall_traffic_stat_collectd>
         Interval {{firewall_traffic_stat_interval}}
         PluginName "firewall_traffic_stat"
+        HostName "{{host_name}}"
+        AccountId "{{account_id}}"
+        VmType  "firewall"
+        Verbose false
+    </Module>
+    <Module firewall_traffic_rate_stat_collectd>
+        Interval {{firewall_traffic_stat_interval}}
+        PluginName "firewall_traffic_rate_stat"
         HostName "{{host_name}}"
         AccountId "{{account_id}}"
         VmType  "firewall"

@@ -45,19 +45,19 @@ def get_traffic_stat(cmd_result):
 
 
 def run_intergrp_cmd():
-    cmd = 'sudo iptaccount -l intergrp | grep ^IP'
+    cmd = 'sudo iptaccount -l intergrp -f| grep ^IP'
     result = run_traffic_cmd(cmd)
     return result
 
 
 def run_internet_cmd():
-    cmd = 'sudo iptaccount -l internet | grep ^IP'
+    cmd = 'sudo iptaccount -l internet -f| grep ^IP'
     result = run_traffic_cmd(cmd)
     return result
 
 
 def run_intragrp_cmd():
-    cmd = 'sudo iptaccount -l intragrp | grep ^IP'
+    cmd = 'sudo iptaccount -l intragrp -f| grep ^IP'
     result = run_traffic_cmd(cmd)
     return result
 
@@ -185,19 +185,21 @@ class FireWallUserStatMon(object):
             intergrp_latest_stat = get_intergrp_stat()
             intragrp_latest_stat = get_intragrp_stat()
 
-            internet_delta_stat = get_delta_value(self.INTERNET_STAT, internet_latest_stat)
-            intergrp_delta_stat = get_delta_value(self.INTERGRP_STAT, intergrp_latest_stat)
-            intragrp_latest_stat = get_delta_value(self.INTRAGRP_STAT, intragrp_latest_stat)
+            # internet_delta_stat = get_delta_value(self.INTERNET_STAT, internet_latest_stat)
+            # intergrp_delta_stat = get_delta_value(self.INTERGRP_STAT, intergrp_latest_stat)
+            # intragrp_delta_stat = get_delta_value(self.INTRAGRP_STAT, intragrp_latest_stat)
             host = "%s__%s__%s" % (self.account_id, self.hostname, self.vm_type)
             # {"10.1.4.77":[src_bytes, src_packets, dst_bytes, dst_packets], }
-            for ip, value in internet_delta_stat.iteritems():
+            for ip, value in internet_latest_stat.iteritems():
+            # for ip, value in internet_delta_stat.iteritems():
                 type_instance = ip
                 plugin_instance = 'internet'
                 self.dispatch_value(self.plugin_name, host, "src_bytes", type_instance, plugin_instance, value[0])
                 self.dispatch_value(self.plugin_name, host, "src_packets", type_instance, plugin_instance, value[1])
                 self.dispatch_value(self.plugin_name, host, "dst_bytes", type_instance, plugin_instance, value[2])
                 self.dispatch_value(self.plugin_name, host, "dst_packets", type_instance, plugin_instance, value[3])
-            for ip, value in intergrp_delta_stat.iteritems():
+            for ip, value in intergrp_latest_stat.iteritems():
+            # for ip, value in intergrp_delta_stat.iteritems():
                 type_instance = ip
                 plugin_instance = 'intergrp'
                 self.dispatch_value(self.plugin_name, host, "src_bytes", type_instance, plugin_instance, value[0])
@@ -205,6 +207,7 @@ class FireWallUserStatMon(object):
                 self.dispatch_value(self.plugin_name, host, "dst_bytes", type_instance, plugin_instance, value[2])
                 self.dispatch_value(self.plugin_name, host, "dst_packets", type_instance, plugin_instance, value[3])
             for ip, value in intragrp_latest_stat.iteritems():
+            # for ip, value in intragrp_delta_stat.iteritems():
                 type_instance = ip
                 plugin_instance = 'intragrp'
                 self.dispatch_value(self.plugin_name, host, "src_bytes", type_instance, plugin_instance, value[0])

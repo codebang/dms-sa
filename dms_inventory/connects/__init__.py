@@ -15,4 +15,5 @@ class ConnectFactory(object):
         if conn_type == "redis":
             host = config.get("redis","host")
             port = config.get("redis","port")
+            rd = redis.Redis(host,port)
             return redis.Redis(host,port)

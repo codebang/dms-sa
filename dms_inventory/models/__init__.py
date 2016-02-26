@@ -70,7 +70,9 @@ class Host(Model):
         self.user_name = data.get("user_name",None)
         self.ip = data.get("ip",None)
         #TUNNELHOST or SERVER
-        self.type = data["type"]
+        self.type = data.get("type",None)
+        if self.groupName is not None and self.groupName == "default":
+            self.user_name = "Unauthorize"
 
     def execute(self,client):
         key_User = self.accountId + "_" + self.ip + "_User"

@@ -75,8 +75,8 @@ class DmsOrchestrator:
         self._configInitialize()
         self._mangerInitialize()
         self._serviceInitialize()
-        self._pluginInitialize()
         self._inventorySync();
+        self._pluginInitialize()
         #self._watiInputDone()
         import time
         while True:

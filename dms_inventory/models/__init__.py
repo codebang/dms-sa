@@ -60,15 +60,20 @@ class User(Model):
         key_Group = self.accountId + "_" + self.user_name + "_Group"
         meta_Group = self.accountId + "_" + self.group_id + "_" + "GroupId2UserName"
         meta_UserName2Id = self.accountId + "_" + self.user_id + "_" + "UserName"
+
         if self.operation == "create":
             client.set(key_Group,self.group_name)
             client.hset(meta_Group,self.user_name,self.user_name)
             client.set(meta_UserName2Id,self.user_name)
+
         elif self.operation == "update":
             name = client.get(meta_UserName2Id)
             name_Group = self.accountId + "_" + name + "_Group"
             client.delete(name_Group)
             client.set(key_Group,self.group_name)
+            client.hdel(meta_Group,name)
+            client.hset(meta_Group,self.user_name)
+
         elif self.operation == "delete":
             client.delete(key_Group)
             client.delete(meta_UserName2Id)

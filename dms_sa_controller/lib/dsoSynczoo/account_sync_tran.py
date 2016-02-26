@@ -11,7 +11,7 @@ import traceback
 import sys
 
 
-def account_sync(self, account_id, zookeeper_host):
+def account_sync(account_id, zookeeper_host):
         try:
             dso_account_client = account_api.AccountApi()
             dso_vpn_client = vpnclient_api.VpnclientApi()

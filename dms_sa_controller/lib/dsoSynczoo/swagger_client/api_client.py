@@ -36,6 +36,7 @@ import threading
 from datetime import datetime
 from datetime import date
 
+from lib.services.servicecontext import ServiceContext
 # python 2 and python 3 compatibility library
 from six import iteritems
 
@@ -76,7 +77,8 @@ class ApiClient(object):
         if header_name is not None:
             self.default_headers[header_name] = header_value
         if host is None:
-            self.host = Configuration().host
+            config = ServiceContext().getConfigService()
+            self.host = config.get("DSO","url")
         else:
             self.host = host
         self.cookie = cookie

@@ -21,7 +21,7 @@ Copyright 2016 SmartBear Software
 from __future__ import absolute_import
 import base64
 import urllib3
-from lib.services.servicecontext import ServiceContext
+
 try:
     import httplib
 except ImportError:
@@ -56,8 +56,6 @@ class Configuration(object):
         Constructor
         """
         # Default Base url
-        config = ServiceContext().getConfigService()
-        self.host = config.get("DSO","url")
         #self.host = "http://10.74.113.56:8282/dso/sa"
         # self.host = "http://localhost:8282/dso/sa"
         # Default api client

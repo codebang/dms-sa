@@ -7,7 +7,7 @@ from .. utils.constants import Tenant_Sate
 from rundeck.client import Rundeck
 from sqlalchemy.orm.session import object_session
 from .. utils import logger
-
+from lib.dsoSynczoo.account_sync_tran import account_sync
 
 def create_tenant_sm(state=Tenant_Sate.INIT):
     sm = Fysom({'initial': state,
@@ -65,6 +65,11 @@ def vmcreate(e):
         logger.error("for node(%s/%s/%s) can not find corresponding service db object" % (tenant.id,msg.vmType,msg.stackid))
         return
 
+    logger.info("part sync start.accountId<%s>" % tenant.id)
+    ctx = ServiceContext()
+    zk_host = ctx.getConfigService().get("Inventory","zk_address")
+    account_sync(tenant.id,zk_host)
+    logger.info("part sync finished.accountId<%s>" % tenant.id)
     node = svc.createnode()
     node.stackid = msg.stackId
     node.vmtype = msg.vmType

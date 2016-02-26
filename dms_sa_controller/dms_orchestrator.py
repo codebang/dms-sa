@@ -12,7 +12,7 @@ from lib.services.servicecontext import ServiceContext
 from Queue import Queue
 from apscheduler.schedulers.background import BackgroundScheduler
 from rundeck.client import  Rundeck
-
+from lib.dsoSynczoo.full_sync_accounts_tran import full_sync
 
 class DmsOrchestrator:
 
@@ -67,11 +67,16 @@ class DmsOrchestrator:
         plugins = self.manager.getPluginsOfCategory('Input')
         map(lambda plugin:plugin.plugin_object.proc.join(),plugins)
 
+    def _inventorySync(self):
+        zk_address = self.config.get("Inventory","zk_address")
+        full_sync(zk_address)
+
     def start(self):
         self._configInitialize()
         self._mangerInitialize()
         self._serviceInitialize()
         self._pluginInitialize()
+        self._inventorySync();
         #self._watiInputDone()
         import time
         while True:

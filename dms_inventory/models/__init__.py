@@ -41,7 +41,52 @@ class UserGroup(Model):
         self.id = data["id"]
 
     def execute(self,client):
-        pass
+        if self.operation == "update":
+            User.updateGroupName(client,self)
+        elif self.operation == "delete":
+            User.deleteGroupName(client,self)
+
+class User(Model):
+    def __init__(self,map):
+        super(User,self).__init__(map)
+
+    def fromMap(self,data):
+        self.group_name = data.get("groupName",None)
+        self.user_name = data.get("name",None)
+        self.group_id = data.get("groupId",None)
+        self.user_id = data.get("id",None)
+
+    def execute(self,client):
+        key_Group = self.accountId + "_" + self.user_name + "_Group"
+        meta_Group = self.accountId + "_" + self.group_id + "_" + "GroupId2UserName"
+        meta_UserName2Id = self.accountId + "_" + self.user_id + "_" + "UserName"
+        if self.operation == "create":
+            client.set(key_Group,self.group_name)
+            client.hset(meta_Group,self.user_name,self.user_name)
+            client.set(meta_UserName2Id,self.user_name)
+        elif self.operation == "update":
+            name = client.get(meta_UserName2Id)
+            name_Group = self.accountId + "_" + name + "_Group"
+            client.delete(name)
+            client.set(key_Group,self.group_name)
+        elif self.operation == "delete":
+            client.delete(key_Group)
+            client.delete(meta_UserName2Id)
+            client.hdel(meta_Group,self.user_name,self.user_name)
+
+
+    @classmethod
+    def updateGroupName(cls,client,group):
+        regex_user = group.accountId + "_" + group.id + "_GroupId2UserName"
+        ret = client.hkeys(regex_user)
+        for name in ret:
+            key_Group = group.accountId + "_" + name + "_Group"
+            client.set(key_Group,group.groupname)
+
+    @classmethod
+    def deleteGroupName(cls,client,group):
+        regex_user = group.accountId + "_" + group.id + "_GroupId2UserName"
+        client.hdel(regex_user)
 
 class Account(Model):
     def __init__(self,map):
@@ -84,24 +129,16 @@ class Host(Model):
             client.delete(key_User)
             client.delete(key_Mac)
 
+    @classmethod
+    def updateUserName(cls,client,user):
+        regex_key = user.accountId + "*" + "_Group"
+        ret = client.get(regex_key)
+        for index in ret:
+            client.set(index,user.user_name)
 
-class User(Model):
-    def __init__(self,map):
-        super(User,self).__init__(map)
 
-    def fromMap(self,data):
-        self.group_name = data.get("groupName",None)
-        self.user_name = data.get("name",None)
-        self.group_id = data.get("groupId",None)
-        self.user_id = data.get("id",None)
 
-    def execute(self,client):
-        key_Group = self.accountId + "_" + self.user_name + "_Group"
-        if self.operation == "create" or self.operation == "update":
-            client.set(key_Group,self.group_name)
-        elif self.operation == "delete":
-            client.delete(key_Group)
-        
+
 class VPN(Model):
     def __init__(self,map):
         super(VPN, self).__init__(map)

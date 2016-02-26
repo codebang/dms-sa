@@ -67,7 +67,7 @@ class User(Model):
         elif self.operation == "update":
             name = client.get(meta_UserName2Id)
             name_Group = self.accountId + "_" + name + "_Group"
-            client.delete(name)
+            client.delete(name_Group)
             client.set(key_Group,self.group_name)
         elif self.operation == "delete":
             client.delete(key_Group)

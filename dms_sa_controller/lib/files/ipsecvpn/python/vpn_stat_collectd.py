@@ -38,7 +38,7 @@ class VPNMetric(object):
             proc = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, close_fds=True)
             (stdout, stderr) = proc.communicate()
             output = stdout.split('\n')
-            print("cmd %s output is %s" % (cmd, output))
+            #print("cmd %s output is %s" % (cmd, output))
             return output
         except Exception as err:
             raise CmdError("failed to execute command: %s, reason: %s" % (' '.join(cmd), err.message))
@@ -146,6 +146,7 @@ class VPNMetric(object):
         '''{"out__10.x.x.x":[packets, bytes, addtime], "in__10.x.x.x":[packets, bytes, addtime], }'''
         return final_metrics
 
+
     def test_convert_metrics(self, dict):
         final_metrics = {}
 
@@ -234,14 +235,21 @@ class VPNMetricMon(object):
         # '''{"out__10.x.x.x":[packets, bytes], "in__10.x.x.x":[packets, bytes], }'''
         self.BASE_LINE = VPNMetric().convert_metrics()
 
+    @staticmethod
+    def normalize_delta_value(latest, org):
+        if latest < org:
+            return latest
+        else:
+            return latest - org
+
     def get_delta_stat(self, latest_stat):
         delta_stat = {}
         for key, value in latest_stat.iteritems():
             if self.BASE_LINE.has_key(key):
                 org_value = self.BASE_LINE.get(key)
-                packets = int(value[0]) - int(org_value[0])
-                bytes = int(value[1]) - int(org_value[1])
-                addtime = int(value[2]) - int(org_value[2])
+                packets = self.normalize_delta_value(int(value[0]), int(org_value[0]))
+                bytes = self.normalize_delta_value(int(value[0]), int(org_value[0]))
+                addtime = self.normalize_delta_value(int(value[0]), int(org_value[0]))
                 delta_stat[key] = [packets, bytes, addtime]
                 self.BASE_LINE[key] = value
             else:
@@ -326,17 +334,16 @@ if __name__ == '__main__':
     # result = vpn_status.test_compose_metrics(stats,users)
     # result = vpn_status.test_convert_metrics(result)
     # print str(result)
-    print '--------stat 1--------'
     vpn_status = VPNMetric()
-    stat1 = vpn_status.convert_metrics()
-    print stat1
+    stat = vpn_status.convert_metrics()
+    print stat
 
-    print '--------stat 2-------'
-    import time
-    time.sleep(10)
-    stat2 = vpn_status.convert_metrics()
-    print '---------delta-------'
-    print(test_get_delta_stat(stat1,stat2))
+    # print '--------stat 2-------'
+    # import time
+    # time.sleep(10)
+    # stat2 = vpn_status.convert_metrics()
+    # print '---------delta-------'
+    # print(test_get_delta_stat(stat1,stat2))
 else:
     import collectd
     vpn_mon = VPNMetricMon()

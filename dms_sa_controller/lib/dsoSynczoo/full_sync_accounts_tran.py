@@ -12,7 +12,6 @@ import sys
 def full_sync(zookeeper_host):
     try:
         dso_account_client = account_api.AccountApi()
-        sync_pre = account_sync_tran.InventorySync()
 
         current_account_list = []
         current_page = 1
@@ -26,7 +25,7 @@ def full_sync(zookeeper_host):
             # get account info for pre account
             for account in accounts:
                 current_account_list.append(account.id)
-                sync_pre.account_sync(account.id, zookeeper_host)
+                account_sync_tran.account_sync(account.id, zookeeper_host)
             current_page += 1
             rtn = dso_account_client.accounts_get(current_page, size)
             accounts = rtn.results.item

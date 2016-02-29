@@ -31,6 +31,7 @@ import mimetypes
 import random
 import tempfile
 import threading
+from . import models
 
 from datetime import datetime
 from datetime import date

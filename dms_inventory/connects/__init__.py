@@ -6,7 +6,7 @@ from util import ConfigurationHelper
 class ConnectFactory(object):
     def getConnect(self,conn_type):
         if conn_type == "redis":
-            config = ConfigurationHelper()
+            config = ConfigurationHelper().config
             host = config.get("redis","host")
             port = config.get("redis","port")
             rd = redis.Redis(host,port)

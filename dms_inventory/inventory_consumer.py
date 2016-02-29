@@ -29,7 +29,7 @@ class KafkaCollector():
     def __init__(self):
 #        self.app_home = os.path.dirname(os.path.abspath(__file__))
 #        os.chdir(self.app_home)
-        config = ConfigurationHelper()
+        config = ConfigurationHelper().config
         self.kafka_host = config.get("Kafka","kafka_broker")
         self.kafka_topic = config.get("Kafka","kafka_topic")
         self.kafka_group = config.get("Kafka","kafka_group")

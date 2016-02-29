@@ -76,7 +76,7 @@ class ApiClient(object):
         if header_name is not None:
             self.default_headers[header_name] = header_value
         if host is None:
-            config = ConfigurationHelper()
+            config = ConfigurationHelper().config
             self.host = config.get("dso","url")
         else:
             self.host = host

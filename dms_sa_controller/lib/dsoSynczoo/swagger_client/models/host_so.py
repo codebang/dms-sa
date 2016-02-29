@@ -20,6 +20,7 @@ Copyright 2016 SmartBear Software
 
 from pprint import pformat
 from six import iteritems
+import json
 
 
 class HostSO(object):
@@ -40,20 +41,23 @@ class HostSO(object):
             'mac': 'str',
             'ip': 'str',
             'host_name': 'str',
-            'domain': 'str'
+            'domain': 'str',
+            'type': 'str'
         }
 
         self.attribute_map = {
             'mac': 'mac',
             'ip': 'ip',
             'host_name': 'hostName',
-            'domain': 'domain'
+            'domain': 'domain',
+            'type': 'type'
         }
 
         self._mac = None
         self._ip = None
         self._host_name = None
         self._domain = None
+        self._type = None
 
     @property
     def mac(self):
@@ -143,6 +147,28 @@ class HostSO(object):
         """
         self._domain = domain
 
+    @property
+    def type(self):
+        """
+        Gets the domain of this HostSO.
+
+
+        :return: The domain of this HostSO.
+        :rtype: str
+        """
+        return self._domain
+
+    @type.setter
+    def type(self, type):
+        """
+        Sets the domain of this HostSO.
+
+
+        :param domain: The domain of this HostSO.
+        :type: str
+        """
+        self._type = type
+
     def to_dict(self):
         """
         Returns the model properties as a dict
@@ -187,3 +213,12 @@ class HostSO(object):
         """
         return not self == other
 
+    def to_kafka_group_host(self, group):
+        result = dict(mac=self._mac, ip=self._ip, groupId=group.id,
+                      groupName=group.groupname, domain=self._domain, type=self._type)
+        return result
+
+    def to_kafka_user_host(self, user):
+        result = dict(mac=self._mac, ip=self._ip, userID=user.id,
+                      user_name=user.name, type=self._type)
+        return json.dumps(result)

@@ -20,6 +20,7 @@ Copyright 2016 SmartBear Software
 
 from pprint import pformat
 from six import iteritems
+import json
 
 
 class UserGroupSO(object):
@@ -212,3 +213,6 @@ class UserGroupSO(object):
         """
         return not self == other
 
+    def to_kafka(self):
+        result = dict(id=self._id, groupname=self._groupname, description=self._description)
+        return json.dumps(result)

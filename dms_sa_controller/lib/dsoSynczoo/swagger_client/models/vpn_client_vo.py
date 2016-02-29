@@ -20,6 +20,7 @@ Copyright 2016 SmartBear Software
 
 from pprint import pformat
 from six import iteritems
+import json
 
 
 class VPNClientVO(object):
@@ -162,3 +163,7 @@ class VPNClientVO(object):
         """
         return not self == other
 
+    def to_kafka(self):
+        result = dict(userName=self._user_name, ip=self._ip,
+                      groupName=self._group)
+        return json.dumps(result)

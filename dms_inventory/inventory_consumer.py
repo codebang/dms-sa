@@ -3,7 +3,7 @@ import avro.io
 import avro.schema
 import io
 import json
-from models import ObjectFactory
+from domains import ObjectFactory
 from connects import ConnectFactory
 from util import logger
 from dsoSynczoo.full_sync_redis import full_sync

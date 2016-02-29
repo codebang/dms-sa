@@ -72,7 +72,7 @@ class User(Model):
             client.delete(name_Group)
             client.set(key_Group,self.group_name)
             client.hdel(meta_Group,name)
-            client.hset(meta_Group,self.user_name)
+            client.hset(meta_Group,self.user_name,self.user_name)
 
         elif self.operation == "delete":
             client.delete(key_Group)
@@ -182,4 +182,3 @@ if __name__ == '__main__':
     """
 
     print ObjectFactory.fromjson(json_vpn)
-

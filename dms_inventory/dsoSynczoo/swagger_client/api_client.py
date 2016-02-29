@@ -19,7 +19,6 @@ Copyright 2016 SmartBear Software
 """
 
 from __future__ import absolute_import
-from . import models
 from .rest import RESTClientObject
 from .rest import ApiException
 
@@ -36,7 +35,7 @@ import threading
 from datetime import datetime
 from datetime import date
 
-# from lib.services.servicecontext import ServiceContext
+from util import ConfigurationHelper
 # python 2 and python 3 compatibility library
 from six import iteritems
 
@@ -77,9 +76,8 @@ class ApiClient(object):
         if header_name is not None:
             self.default_headers[header_name] = header_value
         if host is None:
-            # config = ServiceContext().getConfigService()
-            # self.host = config.get("DSO","url")
-            self.host = "http://localhost:8282/dso/sa"
+            config = ConfigurationHelper()
+            self.host = config.get("dso","url")
         else:
             self.host = host
         self.cookie = cookie

@@ -1,18 +1,12 @@
 import redis
-
-def singleton(cls):
-    instances = {}
-    def _singleton():
-        if cls not in instances:
-            instances[cls] = cls()
-        return instances[cls]
-    return _singleton
-
+from util import singleton
+from util import ConfigurationHelper
 
 @singleton
 class ConnectFactory(object):
-    def getConnect(self,conn_type,config):
+    def getConnect(self,conn_type):
         if conn_type == "redis":
+            config = ConfigurationHelper()
             host = config.get("redis","host")
             port = config.get("redis","port")
             rd = redis.Redis(host,port)

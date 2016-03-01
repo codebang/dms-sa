@@ -55,7 +55,8 @@ def account_sync(account_id):
 
 if __name__ == "__main__":
     start = time.time()
-    full_sync()
+    rs = full_sync()
+    print rs[0]
     used = time.time() - start
     print "full sync finish, use %d sec " % used
     time.sleep(60)

@@ -215,4 +215,4 @@ class AccountInfo(object):
 
     def to_kafka(self):
         result = dict(id=self._id, accountName=self._account_name)
-        return json.dumps(result)
+        return result

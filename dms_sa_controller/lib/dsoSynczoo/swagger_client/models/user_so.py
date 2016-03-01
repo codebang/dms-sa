@@ -191,4 +191,4 @@ class UserSO(object):
     def to_kafka(self, group):
         result = dict(id=self._id, name=self._name, groupId=group.id,
                       groupName=group.groupname, email=self._email)
-        return json.dumps(result)
+        return result

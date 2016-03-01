@@ -166,4 +166,4 @@ class VPNClientVO(object):
     def to_kafka(self):
         result = dict(userName=self._user_name, ip=self._ip,
                       groupName=self._group)
-        return json.dumps(result)
+        return result

@@ -221,4 +221,4 @@ class HostSO(object):
     def to_kafka_user_host(self, user):
         result = dict(mac=self._mac, ip=self._ip, userID=user.id,
                       user_name=user.name, type=self._type)
-        return json.dumps(result)
+        return result

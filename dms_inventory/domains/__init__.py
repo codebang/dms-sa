@@ -73,6 +73,7 @@ class User(Model):
             client.set(key_Group,self.group_name)
             client.hdel(meta_Group,name)
             client.hset(meta_Group,self.user_name,self.user_name)
+            Host.updateUserName(client,self)
 
         elif self.operation == "delete":
             client.delete(key_Group)
@@ -127,19 +128,32 @@ class Host(Model):
     def execute(self,client):
         key_User = self.accountId + "_" + self.ip + "_User"
         key_Mac = self.accountId + "_" + self.mac + "_User"
+        key_user_ip = self.accountId + "_" + self.user_id + "_IP"
+        key_user_mac = self.accountId + "_" + self.user_id + "_MAC"
         if self.operation == "create" or self.operation == "update":
             client.set(key_User,self.user_name)
             client.set(key_Mac,self.user_name)
+            client.hset(key_user_ip,self.ip,self.ip)
+            client.hset(key_user_mac,self.mac,self.mac)
         elif self.operation == "delete":
             client.delete(key_User)
             client.delete(key_Mac)
+            client.hdel(key_user_ip,self.ip)
+            client.hdel(key_user_mac,self.mac)
 
     @classmethod
     def updateUserName(cls,client,user):
-        regex_key = user.accountId + "*" + "_Group"
-        ret = client.get(regex_key)
-        for index in ret:
-            client.set(index,user.user_name)
+        key_user_ip = user.accountId + "_" + user.id + "_IP"
+        key_user_mac = user.accountId + "_" + user.id + "_MAC"
+        ip_keys = client.hkeys(key_user_ip)
+        mac_keys = client.hkeys(key_user_mac)
+        for ip in ip_keys:
+            key_User = user.accountId + "_" + ip + "_User"
+            client.set(key_User,user.user_name)
+        for mac in mac_keys:
+            key_Mac = user.accountId + "_" + mac + "_User"
+            client.set(key_Mac,user.user_name)
+
 
 
 

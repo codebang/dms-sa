@@ -92,7 +92,7 @@ class User(Model):
     @classmethod
     def deleteGroupName(cls,client,group):
         regex_user = group.accountId + "_" + group.id + "_GroupId2UserName"
-        client.hdel(regex_user)
+        client.delete(regex_user)
 
 class Account(Model):
     def __init__(self,map):
@@ -115,6 +115,7 @@ class Host(Model):
         super(Host,self).__init__(map)
 
     def fromMap(self,data):
+        print data
         self.groupName = data.get("groupName",None)
         self.mac = data.get("mac",None)
         self.user_id = data.get("userID",None)
@@ -128,23 +129,26 @@ class Host(Model):
     def execute(self,client):
         key_User = self.accountId + "_" + self.ip + "_User"
         key_Mac = self.accountId + "_" + self.mac + "_User"
-        key_user_ip = self.accountId + "_" + self.user_id + "_IP"
-        key_user_mac = self.accountId + "_" + self.user_id + "_MAC"
+        if self.user_id != None:
+          key_user_ip = self.accountId + "_" + self.user_id + "_IP"
+          key_user_mac = self.accountId + "_" + self.user_id + "_MAC"
         if self.operation == "create" or self.operation == "update":
             client.set(key_User,self.user_name)
             client.set(key_Mac,self.user_name)
-            client.hset(key_user_ip,self.ip,self.ip)
-            client.hset(key_user_mac,self.mac,self.mac)
+            if self.user_id != None:
+              client.hset(key_user_ip,self.ip,self.ip)
+              client.hset(key_user_mac,self.mac,self.mac)
         elif self.operation == "delete":
             client.delete(key_User)
             client.delete(key_Mac)
-            client.hdel(key_user_ip,self.ip)
-            client.hdel(key_user_mac,self.mac)
+            if self.user_id != None:
+              client.hdel(key_user_ip,self.ip)
+              client.hdel(key_user_mac,self.mac)
 
     @classmethod
     def updateUserName(cls,client,user):
-        key_user_ip = user.accountId + "_" + user.id + "_IP"
-        key_user_mac = user.accountId + "_" + user.id + "_MAC"
+        key_user_ip = user.accountId + "_" + user.user_id + "_IP"
+        key_user_mac = user.accountId + "_" + user.user_id + "_MAC"
         ip_keys = client.hkeys(key_user_ip)
         mac_keys = client.hkeys(key_user_mac)
         for ip in ip_keys:

@@ -43,9 +43,10 @@ class KafkaCollector():
             kafkamsg = self._decodemsg(msg)
             try:
                 logger.info("message handling(%s)" % kafkamsg)
-                if kafkamsg["timestamp"] < self.snap_shot:
-                    logger.warning("message is oudate. %s" % kafkamsg)
-                    continue
+#   need to confirm time synchronization
+#                if kafkamsg["timestamp"] < self.snap_shot:
+#                    logger.warning("message is oudate. %s" % kafkamsg)
+#                    continue
                 jsondata = json.loads(kafkamsg['rawdata'])
                 ObjectFactory.fromjson(jsondata["message"]).execute(client)
             except:

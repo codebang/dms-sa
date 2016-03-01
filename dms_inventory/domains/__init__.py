@@ -37,7 +37,7 @@ class UserGroup(Model):
         super(UserGroup, self).__init__(map)
 
     def fromMap(self,data):
-        self.groupname = data["groupname"]
+        self.groupname = data.get("groupname",None)
         self.id = data["id"]
 
     def execute(self,client):
